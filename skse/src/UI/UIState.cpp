@@ -11,18 +11,10 @@ namespace UI {
         }
         switch (activeMenu) {
         case MenuType::kSceneMenu: {
-                /*auto menu = GetHud();
-                if (menu) {
-                    auto ui = GetOSAControlUIRoot(menu, glyph);
-                    auto direction = GetControlString(control);
-                    if (direction != "") {
-                        ui.Invoke(direction.c_str());
-                    }
-                }*/
-            UI::Scene::SceneMenu::Handle(control);
+            UI::Scene::SceneMenu::GetMenu()->Handle(control);
             } break;
         case MenuType::kAlignMenu: {
-                UI::Align::AlignMenu::Handle(control);
+                UI::Align::AlignMenu::GetMenu()->Handle(control);
             } break;
         }
     }
@@ -30,13 +22,13 @@ namespace UI {
     void UIState::SwitchActiveMenu(MenuType menu) {
         activeMenu = menu;
         
-        UI::Align::AlignMenu::Hide();
-        UI::Search::SearchMenu::Hide();
+        UI::Align::AlignMenu::GetMenu()->Hide();
+        UI::Search::SearchMenu::GetMenu()->Hide();
 
         if (menu == MenuType::kAlignMenu) {
-            UI::Align::AlignMenu::Show();
+            UI::Align::AlignMenu::GetMenu()->Show();
         } else if(menu == MenuType::kSearchMenu) {
-            UI::Search::SearchMenu::Show();
+            UI::Search::SearchMenu::GetMenu()->Show();
         }
     }
     void UIState::CloseActiveMenu() {
@@ -61,18 +53,29 @@ namespace UI {
     void UIState::SetThread(OStim::Thread* thread) {
         currentThread = thread;
         currentNode = thread->getCurrentNode();
-        UI::Align::AlignMenu::ThreadChanged();
-        UI::Scene::SceneMenu::UpdateMenuData();
+        UI::Align::AlignMenu::GetMenu()->ThreadChanged();
+        UI::Scene::SceneMenu::GetMenu()->UpdateMenuData();
     }
 
     void UIState::NodeChanged(OStim::Thread* thread, Graph::Node* node) {
         if (!thread || !node) return;
         if (!currentThread->isSameThread(thread)) return;
-
+        
         currentNode = node;
-        UI::Align::AlignMenu::NodeChanged();
-        UI::Scene::SceneMenu::UpdateMenuData();
+        SKSE::GetTaskInterface()->AddTask([node]() {
+            UI::Align::AlignMenu::GetMenu()->NodeChanged();
+            UI::Scene::SceneMenu::GetMenu()->UpdateMenuData();
+            UI::Scene::SceneMenu::GetMenu()->UpdateSpeed();
+        });        
     }
+
+    void UIState::SpeedChanged(OStim::Thread* thread, int speed) {
+        if (!thread) return;
+        if (!currentThread->isSameThread(thread)) return;
+
+        UI::Scene::SceneMenu::GetMenu()->UpdateSpeed();
+    }
+
     void UIState::HandleThreadRemoved(OStim::Thread* thread) {
         if (currentThread == thread) {
             currentThread = nullptr;
