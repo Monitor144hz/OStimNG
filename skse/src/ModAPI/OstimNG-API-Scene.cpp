@@ -5,12 +5,12 @@ namespace OstimNG_API::Scene
      ///
     /// Gets pointer to API singleton from external plugin.
     ///
-    ISceneInterface* OstimNG_API::Scene::ISceneInterface::GetAPI() 
+    ISceneInterface* GetAPI() 
     {
         if (g_ostimSceneInterface) return g_ostimSceneInterface;    
 
         const auto pluginHandle = GetModuleHandle(L"Ostim.dll");
-        const auto requestAPIFunction = reinterpret_cast<_RequestPluginAPI_Scene>(GetProcAddress(pluginHandle, "RequestPluginAPI_Scene"));
+        const auto requestAPIFunction = (_RequestPluginAPI_Scene)(GetProcAddress(pluginHandle, "RequestPluginAPI_Scene"));
          if (!requestAPIFunction) {
             return nullptr;
         }

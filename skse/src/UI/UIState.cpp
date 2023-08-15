@@ -12,10 +12,13 @@ namespace UI {
         switch (activeMenu) {
         case MenuType::kSceneMenu: {
             UI::Scene::SceneMenu::GetMenu()->Handle(control);
-            } break;
+        } break;
         case MenuType::kAlignMenu: {
-                UI::Align::AlignMenu::GetMenu()->Handle(control);
-            } break;
+            UI::Align::AlignMenu::GetMenu()->Handle(control);
+        } break;
+        case MenuType::kSearchMenu: {
+            UI::Search::SearchMenu::GetMenu()->Handle(control);
+        }break;
         }
     }
 
@@ -45,7 +48,9 @@ namespace UI {
             return;
         }
         if (activeMenu == menu) {
-            SwitchActiveMenu(kSceneMenu);
+            if (activeMenu != kSearchMenu || !UI::Search::SearchMenu::GetMenu()->IsInputtingText()) {
+                SwitchActiveMenu(kSceneMenu);
+            }            
             return;
         }
     }
@@ -59,7 +64,7 @@ namespace UI {
 
     void UIState::NodeChanged(OStim::Thread* thread, Graph::Node* node) {
         if (!thread || !node) return;
-        if (!currentThread->isSameThread(thread)) return;
+        if (currentThread != thread) return;
         
         currentNode = node;
         SKSE::GetTaskInterface()->AddTask([node]() {
@@ -71,7 +76,7 @@ namespace UI {
 
     void UIState::SpeedChanged(OStim::Thread* thread, int speed) {
         if (!thread) return;
-        if (!currentThread->isSameThread(thread)) return;
+        if (currentThread != thread) return;
 
         UI::Scene::SceneMenu::GetMenu()->UpdateSpeed();
     }

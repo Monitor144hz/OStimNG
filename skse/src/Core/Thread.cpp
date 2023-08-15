@@ -2,7 +2,7 @@
 
 #include "ThreadManager.h"
 
-#include "Furniture/Furniture.h"
+#include "Furniture/FurnitureTable.h"
 #include "GameAPI/Game.h"
 #include "GameAPI/GameCamera.h"
 #include "Graph/GraphTable.h"
@@ -24,36 +24,40 @@
 #include "Util.h"
 
 namespace OStim {
-    Thread::Thread(ThreadId id, RE::TESObjectREFR* furniture, std::vector<RE::Actor*> actors) : m_threadId{id}, furniture{furniture} {
-        for (RE::Actor* actor : actors) {
-            playerThread |= actor->IsPlayerRef();
+    Thread::Thread(int threadID, ThreadStartParams params) : m_threadId{threadID}, furniture{params.furniture} {
+        for (GameAPI::GameActor actor : params.actors) {
+            playerThread |= actor.isPlayer();
         }
 
         // --- setting up the vehicle --- //
-        RE::TESObjectREFR* center = furniture ? furniture : (playerThread ? RE::PlayerCharacter::GetSingleton() : actors[0]);
-        vehicle = center->PlaceObjectAtMe(Util::LookupTable::OStimVehicle, false).get();
+        this->center = furniture ? furniture.getPosition() : params.actors.front().getPosition();
 
         if (furniture) {
-            furnitureType = Furniture::getFurnitureType(furniture, false);
-            furnitureOwner = ObjectRefUtil::getOwner(furniture);
-            Furniture::lockFurniture(furniture);
+            furnitureType = Furniture::FurnitureTable::getFurnitureType(furniture, false);
+            furnitureOwner = furniture.getOwner();
+            furniture.disableUse();
 
-            std::vector<float> offset = Furniture::getOffset(furniture);
-            float angle = furniture->GetAngleZ();
+            Furniture::FurnitureOffset offset = Furniture::getOffset(furniture);
+            float angle = furniture.getRotation();
             float sin = std::sin(angle);
             float cos = std::cos(angle);
-            vehicle->data.angle.z = angle + offset[3]; // setting the angle does not directly rotate the object, but the call to SetPosition updates it
-            vehicle->SetPosition(furniture->GetPositionX() + cos * offset[0] + sin * offset[1],
-                                 furniture->GetPositionY() - sin * offset[0] + cos * offset[1],
-                                 furniture->GetPositionZ() + offset[2]);
-            
+            center.r += offset.rotation;
+            center.x +=  cos * offset.x + sin * offset.y;
+            center.y += -sin * offset.x + cos * offset.y;
+            center.z += offset.z;
+            furnitureScaleMult = offset.scale;
         } else {
-            vehicle->MoveTo(center);
+            furnitureType = Furniture::FurnitureTable::getFurnitureType("none");
         }
 
-        for (int i = 0; i < actors.size(); i++) {
-            RE::Actor* actor = actors[i];
-            addActorInner(i, actor);
+        for (int i = 0; i < params.actors.size(); i++) {
+            // TODO GameActor
+            addActorInner(i, params.actors[i].form);
+        }
+
+        if (furniture && MCM::MCMTable::resetClutter()) {
+            // TODO GameObject
+            Furniture::resetClutter(furniture.form, MCM::MCMTable::resetClutterRadius() * 100);
         }
 
         if (playerThread) {
@@ -75,10 +79,15 @@ namespace OStim {
             }
         }
 
-        evaluateAutoMode();
+        if (!params.noAutoMode) {
+            evaluateAutoMode();
+        }
+        
         if (!playerThread) {
             stopTimer = MCM::MCMTable::npcSceneDuration();
         }
+
+        endAfterSequence = params.startingSequence && params.endAfterSequence;
     }
 
     Thread::~Thread() {
@@ -103,8 +112,9 @@ namespace OStim {
 
         if (playerThread) {
             auto uiState = UI::UIState::GetSingleton();
-            if(uiState)
+            if (uiState) {
                 uiState->SetThread(this);
+            }
             UI::Scene::SceneMenu::GetMenu()->Show();
         }
 
@@ -112,6 +122,7 @@ namespace OStim {
             FormUtil::sendModEvent(Util::LookupTable::OSexIntegrationMainQuest, "ostim_prestart", "", 0);
             FormUtil::sendModEvent(Util::LookupTable::OSexIntegrationMainQuest, "ostim_start", "", 0);
         }
+        FormUtil::sendModEvent(Util::LookupTable::OSexIntegrationMainQuest, "ostim_thread_start", "", m_threadId);
     }
 
     void Thread::rebuildAlignmentKey() {
@@ -138,13 +149,8 @@ namespace OStim {
 
     void Thread::Navigate(std::string sceneId) {
         for (auto& nav : m_currentNode->navigations) {
-            if (sceneId == nav.destination->scene_id) {
-                ChangeNode(nav.destination);
-                return;
-            }
-            if (nav.isTransition && sceneId == nav.transitionNode->scene_id) {
-                ChangeNode(nav.transitionNode);
-                return;
+            if (sceneId == nav.nodes.front()->scene_id) {
+                ChangeNode(nav.nodes.front());
             }
         }      
     }
@@ -158,10 +164,12 @@ namespace OStim {
 
         std::unique_lock<std::shared_mutex> writeLock(nodeLock);
         if (a_node->isTransition && nodeQueue.empty() && !a_node->navigations.empty()) {
-            nodeQueue.push(a_node->navigations[0].destination);
+            nodeQueueCooldown = a_node->animationLengthMs;
+            for (Graph::Node* navNode : a_node->navigations[0].nodes) {
+                nodeQueue.push({navNode->animationLengthMs, navNode});
+            }
         }
         m_currentNode = a_node;
-        animationTimer = 0;
 
         for (auto& actorIt : m_actors) {
             // --- excitement calculation --- //
@@ -238,13 +246,13 @@ namespace OStim {
         alignActors();
 
         // sounds
-        for (Sound::SoundPlayer*& soundPlayer : soundPlayers) {
+        for (Sound::SoundPlayer* soundPlayer : soundPlayers) {
             delete soundPlayer;
         }
         soundPlayers.clear();
 
         for (Graph::Action& action : m_currentNode->actions) {
-            for (Sound::SoundType*& soundType : action.attributes->sounds) {
+            for (Sound::SoundType* soundType : action.attributes->sounds) {
                 ThreadActor* actor = GetActor(action.actor);
                 ThreadActor* target = GetActor(action.target);
                 if (actor && target) {
@@ -266,7 +274,11 @@ namespace OStim {
             SetSpeed(static_cast<int>(relativeSpeed * (m_currentNode->speeds.size() - 1) + 0.5));
         }
 
-        UI::UIState::GetSingleton()->NodeChanged(this, m_currentNode);
+        if (playerThread) {
+            UI::UIState::GetSingleton()->NodeChanged(this, m_currentNode);
+        }
+
+        nodeChangedAutoControl();
 
         auto messaging = SKSE::GetMessagingInterface();
 
@@ -295,8 +307,8 @@ namespace OStim {
     }
 
     void Thread::addActorInner(int index, RE::Actor* actor) {
-        ActorUtil::lockActor(actor);
-        ActorUtil::setVehicle(actor, vehicle);
+        GameAPI::GameActor gameActor = actor;
+        gameActor.lock();
         addActorSink(actor);
         m_actors.insert(std::make_pair(index, ThreadActor(this, index, actor)));
         ThreadActor* threadActor = GetActor(index);
@@ -307,15 +319,14 @@ namespace OStim {
         if (MCM::MCMTable::removeWeaponsAtStart()) {
             threadActor->removeWeapons();
         }
-        actor->MoveTo(vehicle);
+        logger::info("aligning actor");
         alignActor(threadActor, {});
     }
 
-    std::vector<Trait::ActorConditions> Thread::getActorConditions() {
-        std::vector<Trait::ActorConditions> conditions;
+    std::vector<Trait::ActorCondition> Thread::getActorConditions() {
+        std::vector<Trait::ActorCondition> conditions;
         for (int i = 0; i < m_actors.size(); i++) {
-            // TODO do this with GameActor
-            conditions.push_back(Trait::ActorConditions::create(GetActor(i)->getActor().form));
+            conditions.push_back(Trait::ActorCondition::create(GetActor(i)));
         }
 
         return conditions;
@@ -329,22 +340,16 @@ namespace OStim {
     }
 
     void Thread::alignActor(ThreadActor* threadActor, Alignment::ActorAlignment alignment) {
-        float angle = vehicle->GetAngleZ();
-        float sin = std::sin(angle);
-        float cos = std::cos(angle);
+        float sin = std::sin(center.r);
+        float cos = std::cos(center.r);
+        
+        threadActor->getActor().lockAtPosition(
+            center.x + cos * alignment.offsetX + sin * alignment.offsetY,
+            center.y - sin * alignment.offsetX + cos * alignment.offsetY,
+            center.z + alignment.offsetZ,
+            center.r + MathUtil::toRadians(alignment.rotation));
 
-        float newAngle = vehicle->data.angle.z + MathUtil::toRadians(alignment.rotation);
-
-        RE::Actor* actor = threadActor->getActor().form;
-
-        ObjectRefUtil::stopTranslation(actor);
-
-        actor->SetRotationZ(newAngle);
-
-        ObjectRefUtil::translateTo(actor, vehicle->data.location.x + cos * alignment.offsetX + sin * alignment.offsetY, vehicle->data.location.y - sin * alignment.offsetX + cos * alignment.offsetY, vehicle->data.location.z + alignment.offsetZ,
-            MathUtil::toDegrees(vehicle->data.angle.x), MathUtil::toDegrees(vehicle->data.angle.y), MathUtil::toDegrees(newAngle) + 1, 1000000, 0.0001);
-
-        threadActor->setScaleMult(alignment.scale);
+        threadActor->setScaleMult(alignment.scale * furnitureScaleMult);
         threadActor->setSoSBend(alignment.sosBend);
     }
 
@@ -355,13 +360,6 @@ namespace OStim {
 
     void Thread::loop() {
         //std::shared_lock<std::shared_mutex> readLock(nodeLock);
-
-        if (stopTimer > 0) {
-            if ((stopTimer -= Constants::LOOP_TIME_MILLISECONDS) <= 0) {
-                stop();
-                return;
-            }
-        }
 
         if (!playerThread && !GetActor(0)->getActor().isInSameCell(GameAPI::GameActor::getPlayer())) {
             stop();
@@ -375,30 +373,27 @@ namespace OStim {
             }
         }
 
+        if (stopTimer > 0) {
+            if ((stopTimer -= Constants::LOOP_TIME_MILLISECONDS) <= 0) {
+                stopFaded();
+                return;
+            }
+        }
+
         // TODO: Can remove this when we start scenes in c++ with a starting node
         if (!m_currentNode) {
             return;
         }
 
+        loopNavigation();
         loopAutoControl();
 
         for (auto& actorIt : m_actors) {
             actorIt.second.loop();
         }
 
-        for (Sound::SoundPlayer*& player : soundPlayers) {
+        for (Sound::SoundPlayer* player : soundPlayers) {
             player->loop();
-        }
-
-        animationTimer += Constants::LOOP_TIME_MILLISECONDS;
-        if (animationTimer >= m_currentNode->animationLengthMs) {
-            animationTimer = 0;
-            if (!nodeQueue.empty()) {
-                Graph::Node* next = nodeQueue.front();
-                nodeQueue.pop();
-                logger::info("going to next node {}", next->scene_id);
-                ChangeNode(next);
-            }
         }
     }
 
@@ -445,35 +440,24 @@ namespace OStim {
         for (auto& actorIt : m_actors) {
             if (m_currentNode) {
                 if (m_currentNode->speeds.size() > speed) {
-                    Graph::Node* node = m_currentNode;
-                    GameAPI::GameActor gameActor = actorIt.second.getActor();
-                    int index = actorIt.first;
-                    RE::Actor* actor = actorIt.second.getActor().form;
-
-                    SKSE::GetTaskInterface()->AddTask([speed, node, index, gameActor]() {
-                        // TODO how to do this with GameActor?
-                        gameActor.form->SetGraphVariableFloat("OStimSpeed", node->speeds[speed].playbackSpeed);
-                    });
-                    auto anim = m_currentNode->speeds[speed].animation + "_" + std::to_string(index);
-                    actorIt.second.getActor().playAnimation(anim);
+                    actorIt.second.playAnimation(m_currentNode->speeds[speed]);
 
                     // this fixes some face bugs
                     // TODO how to do this with GraphActor?
                     if (vm) {
                         RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-                        auto args = RE::MakeFunctionArguments<RE::TESObjectREFR*>(std::move(actor));
+                        auto args = RE::MakeFunctionArguments<RE::TESObjectREFR*>(std::move(actorIt.second.getActor().form));
                         vm->DispatchStaticCall("NiOverride", "ApplyNodeOverrides", args, callback);
                     }
                 }
-
-                float speedMod = 1.0 + static_cast<float>(speed) / static_cast<float>(m_currentNode->speeds.size());
-                actorIt.second.setLoopExcitementInc(actorIt.second.getBaseExcitementInc() * actorIt.second.getBaseExcitementMultiplier() * speedMod * Constants::LOOP_TIME_SECONDS);
             }
 
             actorIt.second.changeSpeed(speed);
         }
 
-        UI::UIState::GetSingleton()->SpeedChanged(this, speed);
+        if (playerThread) {
+            UI::UIState::GetSingleton()->SpeedChanged(this, speed);
+        }
 
         FormUtil::sendModEvent(Util::LookupTable::OSexIntegrationMainQuest, "ostim_animationchanged", m_currentNode->scene_id, speed);
     }
@@ -556,21 +540,47 @@ namespace OStim {
         ThreadManager::GetSingleton()->queueThreadStop(m_threadId);
     }
 
+    void Thread::stopFaded() {
+        if (playerThread && MCM::MCMTable::useFades()) {
+            if (isStopping) {
+                return;
+            }
+            isStopping = true;
+
+            std::thread fadeThread = std::thread([&] {
+                GameAPI::GameCamera::fadeToBlack(1);
+                std::this_thread::sleep_for(std::chrono::milliseconds(700));
+                Thread* thread = ThreadManager::GetSingleton()->getPlayerThread();
+                if (thread) {
+                    thread->stop();
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(550));
+                GameAPI::GameCamera::fadeFromBlack(1);
+            });
+            fadeThread.detach();
+        } else {
+            stop();
+        }
+    }
+
     void Thread::close() {
         logger::info("closing thread {}", m_threadId);
-        vehicle->Disable();
-        vehicle->SetDelete(true);
 
         for (auto& actorIt : m_actors) {
             actorIt.second.free();
         }
 
         if (furniture) {
-            Furniture::freeFurniture(furniture, furnitureOwner);
+            furniture.enableUse();
+            furniture.setOwner(furnitureOwner);
+            if (MCM::MCMTable::resetClutter()) {
+                // TODO properly use GameObject
+                Furniture::resetClutter(furniture.form, MCM::MCMTable::resetClutterRadius() * 100);
+            }
         }
 
         if (playerThread) {
-            UI::HideMenus();
+            UI::EndControlledScene();
             GameAPI::GameCamera::endSceneMode(MCM::MCMTable::firstPersonAfterScene());
 
             RE::INISettingCollection* ini = RE::INISettingCollection::GetSingleton();
@@ -588,9 +598,10 @@ namespace OStim {
         logger::info("closed thread {}", m_threadId);
 
         if (playerThread) {
-            FormUtil::sendModEvent(Util::LookupTable::OSexIntegrationMainQuest, "ostim_end", "", -0);
+            FormUtil::sendModEvent(Util::LookupTable::OSexIntegrationMainQuest, "ostim_end", "", -1);
             FormUtil::sendModEvent(Util::LookupTable::OSexIntegrationMainQuest, "ostim_totalend", "", 0);
         }
+        FormUtil::sendModEvent(Util::LookupTable::OSexIntegrationMainQuest, "ostim_thread_end", "", m_threadId);
     }
 
     void Thread::addActorSink(RE::Actor* a_actor) {
@@ -704,7 +715,7 @@ namespace OStim {
     Serialization::OldThread Thread::serialize() {
         Serialization::OldThread oldThread;
 
-        oldThread.vehicle = vehicle;
+        oldThread.threadID = m_threadId;
         if (furniture) {
             oldThread.furniture = furniture;
             oldThread.furnitureOwner = furnitureOwner;
@@ -715,10 +726,6 @@ namespace OStim {
         }
 
         return oldThread;
-    }
-
-    bool Thread::isSameThread(Thread* thread) {
-        return m_threadId == thread->m_threadId;
     }
 
 }  // namespace OStim

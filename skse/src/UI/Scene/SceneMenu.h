@@ -20,10 +20,11 @@ namespace UI::Scene {
 		}
 		static void Register() { OStimMenu::Register(MENU_NAME, Creator); }
 		static RE::stl::owner<RE::IMenu*> Creator() { return new SceneMenu(); }
+		void PostRegister() override;
 
 		void Show();		
 		
-		void Handle(UI::Controls control);
+		void Handle(UI::Controls control) override;
 		void ApplyPositions();
 
 		void ChangeAnimation(std::string nodeId);
@@ -61,11 +62,10 @@ namespace UI::Scene {
 			}
 		};
 
-		 void BuildMenuData(MenuData& menudata);
-		 void UpdateInfoBox();
-		 void SendControl(int32_t control);
 	private:
-
+		void BuildMenuData(MenuData& menudata);
+		void SendControl(int32_t control);
+		void GetOptionBoxes(RE::GFxValue& optionBoxes);
 	};
 
 	class doSendTransitionRequest : public RE::GFxFunctionHandler {

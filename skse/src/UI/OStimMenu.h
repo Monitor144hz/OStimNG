@@ -1,4 +1,5 @@
 #pragma once
+#include "UIInterop.h"
 
 namespace UI {
 	class OStimMenu : public RE::IMenu {
@@ -8,8 +9,16 @@ namespace UI {
 		static void Register(std::string menuName, RE::UI::Create_t* createFn);
 		void Show();
 		void Hide();
-		virtual void Update() {};
+		void Update() {
+			while (!_taskQueue.empty()) {
+				auto& task = _taskQueue.front();
+				task();
+				_taskQueue.pop();
+			}
+		};
 		virtual void AdvanceMovie(float a_interval, std::uint32_t a_currentTime) override;
+		virtual void Handle(UI::Controls control)=0;
+		virtual void PostRegister();
 
 	public:
 		std::string menuName;
@@ -33,14 +42,25 @@ namespace UI {
 			}
 		};
 	protected:
+		using UITask = std::function<void()>;
 
 		bool _isOpen = false;
 		RE::GPtr<RE::GFxMovieView> _view;
 
 		using Lock = std::recursive_mutex;
 		using Locker = std::lock_guard<Lock>;
-		mutable Lock _lock;
+		mutable Lock _lock;		
 
+		std::queue<UITask> _taskQueue;
+	protected:
+		void QueueUITask(std::function<void()> fn) { 
+			//Show();
+			Locker locker(_lock);
+			_taskQueue.push(std::move(fn));
+		}
+		void GetRoot(RE::GFxValue& root);
 	};
+
+
 
 }

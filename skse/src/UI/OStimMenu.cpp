@@ -27,6 +27,8 @@ namespace UI {
         }
     }
 
+    void OStimMenu::PostRegister() {}
+
     void OStimMenu::Register(std::string menuName, RE::UI::Create_t* createFn) {
         auto ui = RE::UI::GetSingleton();
         if (ui) {
@@ -57,9 +59,14 @@ namespace UI {
     }
 
     void OStimMenu::AdvanceMovie(float a_interval, std::uint32_t a_currentTime) {
-        OStimMenu::Update();
+        Update();
         if (_isOpen) {
             RE::IMenu::AdvanceMovie(a_interval, a_currentTime);
         }
+    }
+
+    void OStimMenu::GetRoot(RE::GFxValue& root) {
+        assert(uiMovie);
+        uiMovie->GetVariable(&root, "_root");
     }
 }

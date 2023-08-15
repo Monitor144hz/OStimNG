@@ -33,7 +33,7 @@ namespace UI::Align {
         void NodeChanged();     
         void SetActor(int actor);
 
-        void Handle(UI::Controls control);
+        void Handle(UI::Controls control) override;
 
         void ApplyPositions();
     private:
@@ -47,6 +47,8 @@ namespace UI::Align {
         void LoadCurrentAlignment();
         void CycleIncrement();
 
+        void GetSceneInfo(RE::GFxValue& sceneInfo);
+        void GetAlignmentInfo(RE::GFxValue& alignmentInfo);
     private:
         Alignment::ActorAlignment currentActorInfo;
 

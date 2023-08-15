@@ -3,8 +3,7 @@
 #include "UI/OStimMenu.h"
 
 namespace UI::Search {
-    class SearchMenu : public UI::OStimMenu {
-
+    class SearchMenu : public UI::OStimMenu {        
         struct SearchItem {
             std::string id;
             std::string label;
@@ -23,28 +22,44 @@ namespace UI::Search {
         }
         static void Register() { OStimMenu::Register(MENU_NAME, Creator); }
         static RE::stl::owner<RE::IMenu*> Creator() { return new SearchMenu(); }
-
+        void Handle(UI::Controls control) override;
         void Show();
         void Hide();
-        void AssignData(std::vector<SearchItem>& data);
         void Search(std::string value);
         void SelectOption(std::string val);
+        void PostRegister() override;
 
-        static void ApplyPositions();
+        void ApplyPositions();
+        bool IsInputtingText() { return _inputtingText; }
+    private:
+        void GetControlHandler(RE::GFxValue& controlHandler);
+        void AssignData(std::vector<SearchItem>& data);
+        void SendControl(int32_t control);
+        void SetInputtingText(bool inputting) { _inputtingText = inputting; }
+    private:
+        bool _inputtingText = true;
 
+        class doSearchFunction : public RE::GFxFunctionHandler {
+        public:
+            void Call(Params& args) override {
+                UI::Search::SearchMenu::GetMenu()->Search(args.args[0].GetString());
+            }
+        };
+
+        class doSelectOptionFunction : public RE::GFxFunctionHandler {
+        public:
+            void Call(Params& args) override {
+                UI::Search::SearchMenu::GetMenu()->SelectOption(args.args[0].GetString());
+            }
+        };
+
+        class doSetInputtingTextFunction : public RE::GFxFunctionHandler {
+        public:
+            void Call(Params& args) override {
+                UI::Search::SearchMenu::GetMenu()->SetInputtingText(args.args[0].GetBool());
+            }
+        };
     };
 
-    class doSearchFunction : public RE::GFxFunctionHandler {
-    public:
-        void Call(Params& args) override {
-            UI::Search::SearchMenu::GetMenu()->Search(args.args[0].GetString());
-        }
-    };
-
-    class doSelectOptionFunction : public RE::GFxFunctionHandler {
-    public:
-        void Call(Params& args) override {
-            UI::Search::SearchMenu::GetMenu()->SelectOption(args.args[0].GetString());
-        }
-    };
+    
 }

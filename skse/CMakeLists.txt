@@ -33,7 +33,14 @@ set(sources
     src/Core/ExpressionUpdater.cpp
     src/Core/Singleton.h
     src/Core/Thread/ThreadAutoControl.cpp
+    src/Core/Thread/ThreadClimax.cpp
     src/Core/Thread/ThreadNavigation.cpp
+    src/Core/ThreadActor/ThreadActorAnimation.cpp
+    src/Core/ThreadActor/ThreadActorClimax.cpp
+    src/Core/ThreadActor/ThreadActorExcitement.cpp
+    src/Core/ThreadStarter/NPCThreadStarter.cpp
+    src/Core/ThreadStarter/PlayerThreadStarter.cpp
+    src/Core/ThreadStarter/ThreadStarter.cpp
     src/Core/Thread.cpp
     src/Core/ThreadActor.cpp
     src/Core/ThreadInterface.cpp
@@ -42,20 +49,28 @@ set(sources
     src/Events/EventListener.cpp
     src/Furniture/Furniture.cpp
     src/Furniture/FurnitureTable.cpp
+    src/Furniture/FurnitureType.cpp
     src/Game/LocaleManager.cpp
 	src/Game/LocaleManager.h
 	src/Game/Locker.h
-	src/Game/Patch.h
     src/GameAPI/Game.cpp
     src/GameAPI/GameActor.cpp
     src/GameAPI/GameCamera.cpp
+    src/GameAPI/GameObject.cpp
     src/GameAPI/GameSex.cpp
     src/GameAPI/GameSound.cpp
     src/GameAPI/GameUtil.cpp
     src/GameAPI/GameTable.cpp
+    src/Graph/GraphTable/GraphTableActions.cpp
+    src/Graph/GraphTable/GraphTableEvents.cpp
+    src/Graph/GraphTable/GraphTableNodes.cpp
+    src/Graph/GraphTable/GraphTableSequences.cpp
+    src/Graph/GraphTable/GraphTableSetupNodes.cpp
+    src/Graph/Node/NodeNavigation.cpp
     src/Graph/Action.cpp
     src/Graph/GraphTable.cpp
     src/Graph/Node.cpp
+    src/Graph/Sequence.cpp
     src/InterfaceSpec/PluginInterface.cpp
     src/MCM/MCMSetting.cpp
     src/MCM/MCMTable.cpp
@@ -88,6 +103,8 @@ set(sources
     src/Util/CompatibilityTable.cpp
     src/Util/ControlUtil.cpp
     src/Util/FormUtil.cpp
+    src/Util/IDGenerator.cpp
+    src/Util/JsonUtil.cpp
     src/Util/LegacyUtil.cpp
     src/Util/LookupTable.cpp
     src/Util/ObjectRefUtil.cpp
@@ -147,3 +164,36 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/Sample"
 
 install(TARGETS ${PROJECT_NAME}
         DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+
+
+if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
+        set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/OStim Standalone Public Beta Fork")
+endif()
+
+if(DEFINED OUTPUT_FOLDER)
+    # If you specify an <OUTPUT_FOLDER> (including via environment variables)
+    # then we'll copy your mod files into Skyrim or a mod manager for you!
+
+    # Copy the SKSE plugin .dll files into the SKSE/Plugins/ folder
+    set(DLL_FOLDER "${OUTPUT_FOLDER}/SKSE/Plugins")
+
+    message(STATUS "SKSE plugin output folder: ${DLL_FOLDER}")
+
+    add_custom_command(
+        TARGET "${PROJECT_NAME}"
+        POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${DLL_FOLDER}"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${PROJECT_NAME}>" "${DLL_FOLDER}/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
+        VERBATIM
+    )
+
+    # If you perform a "Debug" build, also copy .pdb file (for debug symbols)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        add_custom_command(
+            TARGET "${PROJECT_NAME}"
+            POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_PDB_FILE:${PROJECT_NAME}>" "${DLL_FOLDER}/$<TARGET_PDB_FILE_NAME:${PROJECT_NAME}>"
+            VERBATIM
+        )
+    endif()
+endif()

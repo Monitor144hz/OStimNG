@@ -4,23 +4,20 @@
 #include "Core/ThreadInterface.h"
 #include "Events/EventListener.h"
 #include "Furniture/FurnitureTable.h"
-#include "Game/Patch.h"
 #include "GameAPI/GameTable.h"
 #include "Graph/GraphTable.h"
 #include "InterfaceSpec/IPluginInterface.h"
 #include "InterfaceSpec/PluginInterface.h"
+#include "MCM/MCMTable.h"
 #include "Messaging/IMessages.h"
 #include "Papyrus/Papyrus.h"
 #include "Serial/Manager.h"
 #include "Sound/SoundTable.h"
 #include "Trait/TraitTable.h"
-#include "UI/Align/AlignMenu.h"
-#include "Util/CompatibilityTable.h"
-#include "Util/LookupTable.h"
-#include "MCM/MCMTable.h"
-#include "UI/Scene/SceneMenu.h"
 #include "UI/UIState.h"
-
+#include "Util/CompatibilityTable.h"
+#include "Util/LegacyUtil.h"
+#include "Util/LookupTable.h"
 
 using namespace RE::BSScript;
 using namespace SKSE;
@@ -70,7 +67,6 @@ namespace {
                 if (message) {
                     message->RegisterListener(nullptr, UnspecificedSenderMessageHandler);
                 }
-                UI::RegisterMenus();
             } break;
             case SKSE::MessagingInterface::kInputLoaded: {
                 RE::BSInputDeviceManager::GetSingleton()->AddEventSink(Events::EventListener::GetSingleton());
@@ -83,19 +79,28 @@ namespace {
                 Graph::GraphTable::SetupActions();
                 Trait::TraitTable::setup();
                 Alignment::Alignments::LoadAlignments();
-                Papyrus::Build();
+                Furniture::FurnitureTable::setupFurnitureTypes();
+                LegacyUtil::loadLegacyScenes();
+                Graph::GraphTable::setupNodes();
+                Graph::GraphTable::setupSequences();
 
                 Compatibility::CompatibilityTable::setupForms();
                 Util::LookupTable::setupForms();
                 Trait::TraitTable::setupForms();
                 MCM::MCMTable::setupForms();
-                Furniture::FurnitureTable::setupForms();
                 Graph::GraphTable::setupEvents();
 
                 
                 // we are installing this hook so late because we need it to overwrite the PapyrusUtil hook
                 Events::PackageStart::Install();
             } break;
+            case SKSE::MessagingInterface::kPreLoadGame: {
+                UI::PostRegisterMenus();
+            } break;
+            case SKSE::MessagingInterface::kNewGame: {
+                UI::PostRegisterMenus();
+            } break;
+
         }
     }
 }  // namespace
@@ -117,7 +122,6 @@ SKSEPluginLoad(const LoadInterface* skse) {
         return false;
     }
 
-    Patch::Install();
     Papyrus::Bind();
     UI::Settings::LoadSettings();
 
@@ -127,6 +131,7 @@ SKSEPluginLoad(const LoadInterface* skse) {
     serial->SetLoadCallback(Serialization::Load);
     serial->SetRevertCallback(Serialization::Revert);
 
+    UI::RegisterMenus();
     log::info("{} has finished loading.", plugin->GetName());
     return true;
 }
