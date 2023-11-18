@@ -1,5 +1,11 @@
 {
+	"aliases":[
+		"holdhip",
+		"holdhips",
+		"holdinghips"
+	],
 	"actor":{
+		"info": "the one with the hand",
 		"requirements":[
 			"hand"
 		],
@@ -8,6 +14,7 @@
 		]
 	},
 	"target":{
+		"info": "the one with the hip"
 	},
 	"tags":[
 		"romantic"

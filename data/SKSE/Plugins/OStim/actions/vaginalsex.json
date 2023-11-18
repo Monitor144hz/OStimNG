@@ -1,5 +1,9 @@
 {
+	"aliases":[
+		"sex"
+	],
 	"actor":{
+		"info": "the one with the penis",
 		"stimulation":1.0,
 		"fullStrip":true,
 		"moan":true,
@@ -13,9 +17,22 @@
 			52,
 			53,
 			54
+		],
+		"faction":[
+			{
+				"info": "OStimVaginalSexActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE90"
+			},
+			{
+				"info": "OStimAnySexMateFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEC9"
+			}
 		]
 	},
 	"target":{
+		"info": "the one with the vulva",
 		"stimulation":1.0,
 		"fullStrip":true,
 		"moan":true,
@@ -30,6 +47,18 @@
 			53,
 			54
 		],
+		"faction":[
+			{
+				"info": "OStimVaginalSexTargetFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE91"
+			},
+			{
+				"info": "OStimAnySexMateFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEC9"
+			}
+		],
 		"stringLists":{
 			"cum":[
 				"vagina"
@@ -37,6 +66,11 @@
 		}
 	},
 	"performer":{
+		"faction":{
+			"info": "OStimVaginalSexPerformerFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE92"
+		},
 		"floats":{
 			"stamina":1.0
 		}

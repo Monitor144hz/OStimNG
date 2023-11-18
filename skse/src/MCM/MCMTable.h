@@ -15,6 +15,8 @@ namespace MCM {
         inline static bool useIntroScenes() { return settings[0xDA1].asBool(); }
         inline static bool addActorsAtStart() { return settings[0xE45].asBool(); }
 
+        inline static bool onlyLightInDark() { return settings[0xE24].asBool(); }
+
         inline static int keyUp() { return settings[0xE28].asInt(); }
         inline static int keyDown() { return settings[0xE29].asInt(); }
         inline static int keyLeft() { return settings[0xE2A].asInt(); }
@@ -100,16 +102,18 @@ namespace MCM {
         inline static uint32_t getUndressingMask() { return undressingMask; }
         inline static void setUndressingMask(uint32_t mask) { undressingMask = mask; }
 
-        // not really an MCM option but idk where else to put it
-        static void setPapyusUndressing(bool doPapyrus);
-        inline static bool usePapyrusUndressing() { return doPapyrusUndressing; }
-
         inline static int getExpressionDurationMin() { return settings[0xDB2].asInt(); }
         inline static int getExpressionDurationMax() { return settings[0xDB3].asInt(); }
 
         inline static int getMoanIntervalMin() { return settings[0xE0A].asInt(); }
         inline static int getMoanIntervalMax() { return settings[0xE0B].asInt(); }
         inline static float getMoanVolume() { return settings[0xE0C].asFloat(); }
+
+        inline static int getMaleDialogueCountdownMin() { return settings[0xE95].asInt(); }
+        inline static int getMaleDialogueCountdownMax() { return settings[0xE96].asInt(); }
+        inline static int getFemaleDialogueCountdownMin() { return settings[0xE97].asInt(); }
+        inline static int getFemaleDialogueCountdownMax() { return settings[0xE98].asInt(); }
+
         inline static float getSoundVolume() { return settings[0xE0D].asFloat(); }
 
         inline static bool intendedSexOnly() { return settings[0xDEE].asBool(); }
@@ -126,6 +130,7 @@ namespace MCM {
         inline static bool unequipStrapOnIfInWay() { return settings[0xDDD].asBool(); }
 
         static bool useSoSSex();
+        static bool futaUseMaleRole();
         static bool futaUseMaleExcitement();
         static bool futaUseMaleClimax();
         static bool futaUseMaleLight();
@@ -148,11 +153,10 @@ namespace MCM {
             {0xDA1, {1, "SetUseIntroScenes"}},
             {0xE45, {1, "addActorsAtStart"}},
 
-            {0xE22, {0, "SetDomLightMode"}},
-            {0xE23, {0, "SetSubLightMode"}},
             {0xE24, {0, "SetOnlyLightInDark"}},
-            {0xE26, {0, "SetDomLightBrightness"}},
-            {0xE27, {0, "SetSubLightBrightness"}},
+
+            {0xEC1, {0, "autoExportSettings"}},
+            {0xEC2, {0, "autoImportSettings"}},
 
             {0xE28, {72, "SetOsaUpKey"}},
             {0xE29, {76, "SetOsaDownKey"}},
@@ -245,11 +249,15 @@ namespace MCM {
             {0xDB3, {3000, "SetExpressionDurationMax"}},
 
             {0xE0A, {2500, "moanIntervalMin"}},
-            {0xE0B, {5000, "moanIntervalMax"}},
+            {0xE0B, {4000, "moanIntervalMax"}},
             {0xE0C, {1, "moanVolume"}},
+            {0xE95, {3, "maleDialogueCountdownMin"}},
+            {0xE96, {6, "maleDialogueCountdownMax"}},
+            {0xE97, {1, "femaleDialogueCountdownMin"}},
+            {0xE98, {3, "femaleDialogueCountdownMax"}},
             {0xE0D, {1, "soundVolume"}},
 
-            {0xDEE, {0, "SetOnlyGayAnimsInGayScenes"}},  // intended sex only
+            {0xDEE, {1, "SetOnlyGayAnimsInGayScenes"}},  // intended sex only
             {0XDEF, {0, "PlayerAlwaysDomStraight"}},
             {0XDF0, {0, "PlayerAlwaysSubStraight"}},
             {0XDF1, {0, "PlayerAlwaysDomGay"}},
@@ -263,9 +271,9 @@ namespace MCM {
             {0xDDD, {1, "unequipStrapOnIfInWay"}},
 
             {0xE04, {1, "useSoSSex"}},
+            {0xE48, {1, "futaUseMaleRole"}},
             {0xE05, {0, "futaUseMaleExcitement"}},
             {0xE17, {1, "futaUseMaleClimax"}},
-            {0xE25, {1, "futaUseMaleLight"}},
             
             {0xD94, {0, "SetScaling"}},
             {0xD97, {0, "SetSchlongBending"}},
@@ -277,8 +285,5 @@ namespace MCM {
         inline static RE::TESGlobal* OStimKeySceneStart;
 
         inline static uint32_t undressingMask = 0x3D8BC39D;
-
-        inline static bool doPapyrusUndressing = false;
-        inline static RE::TESGlobal* OStimUsePapyrusUndressing;
     };
 }

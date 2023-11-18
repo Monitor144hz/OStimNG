@@ -5,6 +5,7 @@
 #include "MCM/MCMTable.h"
 #include "Trait/TraitTable.h"
 #include "Util/ActorUtil.h"
+#include "Util/APITable.h"
 
 namespace OStim {
     void freeActor(GameAPI::GameActor actor, bool byGameLoad) {
@@ -15,13 +16,19 @@ namespace OStim {
             // TODO: clear potential heel offset
         }
 
-        actor.removeFromFaction(Trait::TraitTable::getExcitementFaction());
+        actor.removeFromFaction(Util::APITable::getActorCountFaction());
+        actor.removeFromFaction(Util::APITable::getExcitementFaction());
+        actor.removeFromFaction(Util::APITable::getSchlongifiedFaction());
+        actor.removeFromFaction(Util::APITable::getTimesClimaxedFaction());
+        actor.removeFromFaction(Util::APITable::getTimeUntilClimaxFaction());
         actor.unlock();
         
         actor.updateAI();
+
+        actor.playAnimation("SOSFlaccid");
     }
 
     bool isEligible(GameAPI::GameActor actor) {
-        return !actor.isChild() && Trait::TraitTable::getActorType(actor) != "" && !ThreadManager::GetSingleton()->findActor(actor);
+        return !actor.isDisabled() && !actor.isDeleted() && !actor.isChild() && !actor.isDead() && Trait::TraitTable::getActorType(actor) != "" && !ThreadManager::GetSingleton()->findActor(actor);
     }
 }

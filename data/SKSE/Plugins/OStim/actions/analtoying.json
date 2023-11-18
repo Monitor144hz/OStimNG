@@ -1,0 +1,46 @@
+{
+	"actor":{
+		"info": "the one holding the toy",
+		"stimulation":0.1,
+		"maxStimulation":75,
+		"fullStrip":true,
+		"moan":true,
+		"talk":true,
+		"faction":{
+			"info": "OStimAnalToyingActorFaction",
+			"mod": "OStim.esp",
+			"formid": "0xEA1"
+		}
+	},
+	"target":{
+		"info": "the one with the vulva",
+		"stimulation":0.3,
+		"fullStrip":true,
+		"moan":true,
+		"talk":true,
+		"requirements":[
+			"anus"
+		],
+		"strippingSlots":[
+			32,
+			49,
+			52,
+			53,
+			54
+		],
+		"faction":{
+			"info": "OStimAnalToyingTargetFaction",
+			"mod": "OStim.esp",
+			"formid": "0xEA2"
+		}
+	},
+	"performer":{
+		"floats":{
+			"stamina":0.75
+		}
+	},
+	"tags":[
+		"sexual",
+		"toy"
+	]
+}

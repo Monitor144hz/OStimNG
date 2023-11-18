@@ -1,7 +1,15 @@
 {
+	"info": "lickingvagina is with a tongue, if you want no tongue use cunnilingus",
+	"aliases":[
+		"lickpussy",
+		"lickvagina",
+		"lickingpussy"
+	],
 	"actor":{
+		"info": "the one with the mouth",
 		"stimulation":0.1,
 		"maxStimulation":50,
+		"moan":true,
 		"muffled":true,
 		"expressionOverride":"tongue",
 		"requirements":[
@@ -12,9 +20,22 @@
 			31,
 			44,
 			55
+		],
+		"faction":[
+			{
+				"info": "OStimLickingVaginaActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE7D"
+			},
+			{
+				"info": "OStimAnyOralActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEA7"
+			}
 		]
 	},
 	"target":{
+		"info": "the one with the vulva",
 		"stimulation":1.4,
 		"fullStrip":true,
 		"moan":true,
@@ -28,6 +49,18 @@
 			52,
 			53,
 			54
+		],
+		"faction":[
+			{
+				"info": "OStimLickingVaginaTargetFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE7E"
+			},
+			{
+				"info": "OStimAnyOralTargetFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEA8"
+			}
 		]
 	},
 	"performer":{

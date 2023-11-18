@@ -2,6 +2,8 @@
 * * helper script to build threads with more complex starting parameter
 * * basically a factory but limited by Papyrus, so not really a factory
 * *
+* * required API Version: 29
+* *
 * * note: the BuilderID is most likely not going to be the same as the thread id
 */;
 ScriptName OThreadBuilder
@@ -32,6 +34,17 @@ Function SetDominantActors(int BuilderID, Actor[] Actors) Global Native
 */;
 Function SetFurniture(int BuilderID, ObjectReference FurnitureRef) Global Native
 
+;/* SetDuration
+* * sets the duration of the thread (in seconds), when this duration is over the thread ends
+* * the thread can still end sooner than that due to player input or stop conditions (like end on climax)
+* *
+* * required API version: 30
+* *
+* * @param: BuilderID, the id of the thread builder
+* * @param: Duration, the duration for the thread
+*/;
+Function SetDuration(int BuilderID, float Duration) Global Native
+
 ;/* SetStartingAnimation
 * * sets the starting animation of the scene
 * * if a starting sequence is set the starting animation is ignored
@@ -43,6 +56,8 @@ Function SetStartingAnimation(int BuilderID, string Animation) Global Native
 
 ;/* SetStartingSequence
 * * sets the starting sequence of the scene
+* *
+* * required API version: 30
 * *
 * * @param: BuilderID, the id of the thread builder
 * * @param: Sequence, the id of the sequence
@@ -81,6 +96,25 @@ Function UndressActors(int BuilderID) Global Native
 */;
 Function NoAutoMode(int BuilderID) Global Native
 
+;/* NoPlayerControl
+* * disables player control for the scene, does nothing on NPCxNPC scenes
+* *
+* * required API Version: 30
+* *
+* * @param: BuilderID, the id of the thread builder
+*/;
+Function NoPlayerControl(int BuilderID) Global Native
+
+;/* NoUnressing
+* * disables all undressing during the scene, no matter the MCM settings
+* * this also overrules UndressActors
+* *
+* * required API Version: 30
+* *
+* * @param: BuilderID, the id of the thread builder
+*/;
+Function NoUndressing(int BuilderID) Global Native
+
 ;/* NoFurniture
 * * disables furniture for the scene
 * * if this is called the scene will not offer to use or automatically select furniture
@@ -107,6 +141,7 @@ Function SetMetadata(int BuilderID, string[] Metadata) Global Native
 * * @param: Metadata, a csv-string of metadata
 */;
 Function SetMetadataCSV(int BuilderID, string Metadata) Global Native
+
 
 ;/* Start
 * * starts the thread

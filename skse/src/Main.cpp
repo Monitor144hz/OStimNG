@@ -15,9 +15,13 @@
 #include "Sound/SoundTable.h"
 #include "Trait/TraitTable.h"
 #include "UI/UIState.h"
+#include "Util/APITable.h"
 #include "Util/CompatibilityTable.h"
+#include "Util/Globals.h"
+#include "Util/Integrity.h"
 #include "Util/LegacyUtil.h"
 #include "Util/LookupTable.h"
+#include "Util/RNGUtil.h"
 
 using namespace RE::BSScript;
 using namespace SKSE;
@@ -67,14 +71,17 @@ namespace {
                 if (message) {
                     message->RegisterListener(nullptr, UnspecificedSenderMessageHandler);
                 }
+
+                Util::Globals::setSceneIntegrityVerified(Integrity::verifySceneIntegrity());
             } break;
             case SKSE::MessagingInterface::kInputLoaded: {
                 RE::BSInputDeviceManager::GetSingleton()->AddEventSink(Events::EventListener::GetSingleton());
             } break;
             case SKSE::MessagingInterface::kDataLoaded: {
-                // needs to be in here because a lot of these need to access forms
                 GameAPI::GameTable::setup();
 
+                Util::APITable::setupForms();
+                Util::Globals::setupForms();
                 Sound::SoundTable::setup();
                 Graph::GraphTable::SetupActions();
                 Trait::TraitTable::setup();
@@ -90,15 +97,17 @@ namespace {
                 MCM::MCMTable::setupForms();
                 Graph::GraphTable::setupEvents();
 
+                UI::PostRegisterMenus();
                 
                 // we are installing this hook so late because we need it to overwrite the PapyrusUtil hook
                 Events::PackageStart::Install();
             } break;
             case SKSE::MessagingInterface::kPreLoadGame: {
-                UI::PostRegisterMenus();
+                //UI::PostRegisterMenus();
             } break;
             case SKSE::MessagingInterface::kNewGame: {
-                UI::PostRegisterMenus();
+                Events::EventListener::handleGameLoad();
+                //UI::PostRegisterMenus();
             } break;
 
         }
@@ -132,6 +141,8 @@ SKSEPluginLoad(const LoadInterface* skse) {
     serial->SetRevertCallback(Serialization::Revert);
 
     UI::RegisterMenus();
+
+    RNGUtil::setup();
     log::info("{} has finished loading.", plugin->GetName());
     return true;
 }

@@ -1,4 +1,5 @@
 {
+	"info": "malemasturbation is for when actor and target are the same, if they are different use handjob",
 	"actor":{
 		"stimulation":0.0,
 		"requirements":[
@@ -6,12 +7,18 @@
 		],
 		"strippingSlots":[
 			33
-		]
+		],
+		"faction":{
+			"info": "OStimMaleMasturbationFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE7F"
+		}
 	},
 	"target":{
 		"stimulation":0.9,
 		"fullStrip":true,
 		"moan":true,
+		"talk": true,
 		"requirements":[
 			"penis"
 		],

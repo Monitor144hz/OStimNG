@@ -1,7 +1,12 @@
 {
+	"info": "kissing is two sided, you don't need to add two actions for it",
+	"aliases":[
+		"kiss"
+	],
 	"actor":{
 		"stimulation":0.1,
 		"maxStimulation":50,
+		"moan":true,
 		"muffled":true,
 		"requirements":[
 			"mouth"
@@ -11,11 +16,24 @@
 			31,
 			44,
 			55
+		],
+		"faction":[
+			{
+				"info": "OStimKissingFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE72"
+			},
+			{
+				"info": "OStimAnyKissingActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEC7"
+			}
 		]
 	},
 	"target":{
 		"stimulation":0.1,
 		"maxStimulation":50,
+		"moan":true,
 		"muffled":true,
 		"requirements":[
 			"mouth"
@@ -25,6 +43,18 @@
 			31,
 			44,
 			55
+		],
+		"faction":[
+			{
+				"info": "OStimKissingFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE72"
+			},
+			{
+				"info": "OStimAnyKissingActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEC7"
+			}
 		]
 	},
 	"tags":[

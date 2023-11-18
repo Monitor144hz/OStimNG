@@ -1,7 +1,13 @@
 {
+	"aliases":[
+		"thighj",
+		"tj"
+	],
 	"actor":{
+		"info": "the one with the thighs",
 		"stimulation":0.2,
 		"fullStrip":true,
+		"moan": true,
 		"talk":true,
 		"requirements":[
 		],
@@ -12,6 +18,11 @@
 			53,
 			54
 		],
+		"faction":{
+			"info": "OStimThighjobActorFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE88"
+		},
 		"stringLists":{
 			"cum":[
 				"thighs"
@@ -19,6 +30,7 @@
 		}
 	},
 	"target":{
+		"info": "the one with the penis",
 		"stimulation":0.9,
 		"fullStrip":true,
 		"moan":true,
@@ -32,9 +44,18 @@
 			52,
 			53,
 			54
-		]
+		],
+		"faction":{
+			"info": "OStimThighjobTargetFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE89"
+		}
 	},
 	"performer":{
+		"faction":{
+			"mod": "OStim.esp",
+			"formid": "0xE8A"
+		},
 		"floats":{
 			"stamina":0.75
 		}

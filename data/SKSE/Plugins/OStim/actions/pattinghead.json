@@ -1,5 +1,9 @@
 {
+	"aliases":[
+		"pathead"
+	],
 	"actor":{
+		"info": "the one with the hand",
 		"requirements":[
 			"hand"
 		],
@@ -8,6 +12,7 @@
 		]
 	},
 	"target":{
+		"info": "the one with the head",
 		"strippingSlots":[
 			30,
 			31

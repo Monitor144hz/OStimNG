@@ -1,0 +1,15 @@
+{
+	"info": "cuddling is a one sided action, if they cuddle each other add two actions to the scene",
+	"aliases":[
+		"cuddle"	
+	],
+	"actor":{
+		"info": "the cuddling one"
+	},
+	"target":{
+		"info": "the cuddled one"
+	},
+	"tags":[
+		"sensual"
+	]
+}

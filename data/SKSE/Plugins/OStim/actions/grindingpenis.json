@@ -1,5 +1,11 @@
 {
+	"aliases":[
+		"grinddick",
+		"grindingdick",
+		"grindpenis"	
+	],
 	"actor":{
+		"info": "the one with the vulva",
 		"stimulation":0.75,
 		"fullStrip":true,
 		"moan":true,
@@ -13,9 +19,15 @@
 			52,
 			53,
 			54
-		]
+		],
+		"faction":{
+			"info": "OStimGrindingPenisActorFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE64"
+		}
 	},
 	"target":{
+		"info": "the one with the penis",
 		"stimulation":0.75,
 		"fullStrip":true,
 		"moan":true,
@@ -29,9 +41,19 @@
 			52,
 			53,
 			54
-		]
+		],
+		"faction":{
+			"info": "OStimGrindingPenisTargetFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE65"
+		}
 	},
 	"performer":{
+		"faction":{
+			"info": "OStimGrindingPenisPerformerFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE66"
+		},
 		"floats":{
 			"stamina":1.0
 		}

@@ -29,32 +29,31 @@ namespace Graph {
 
         std::string ret = description;
         for (auto& [index, actor] : thread->getActors()) {
-            StringUtil::replaceAll(description, "{" + std::to_string(index) + "}", actor.getActor().getName());
+            StringUtil::replaceAll(ret, "{" + std::to_string(index) + "}", actor.getActor().getName());
         }
 
         return ret;
     }
 
+
+    void Node::tryAddTag(std::string tag) {
+        if (VectorUtil::contains(tags, tag)) {
+            return;
+        }
+
+        tags.push_back(tag);
+    }
     
     void Node::mergeActionsIntoActors() {
         for (Action action : actions) {
             if (action.actor < actors.size()) {
-                actors[action.actor].condition.requirements |= action.attributes->actor.requirements;
-                actors[action.actor].moan |= action.attributes->actor.moan;
-                actors[action.actor].talk |= action.attributes->actor.talk;
-                actors[action.actor].muffled |= action.attributes->actor.muffled;
+                actors[action.actor].merge(action.attributes->actor);
             }
             if (action.target < actors.size()) {
-                actors[action.target].condition.requirements |= action.attributes->target.requirements;
-                actors[action.target].moan |= action.attributes->target.moan;
-                actors[action.target].talk |= action.attributes->target.talk;
-                actors[action.target].muffled |= action.attributes->target.muffled;
+                actors[action.target].merge(action.attributes->target);
             }
             if (action.performer < actors.size()) {
-                actors[action.performer].condition.requirements |= action.attributes->performer.requirements;
-                actors[action.performer].moan |= action.attributes->performer.moan;
-                actors[action.performer].talk |= action.attributes->performer.talk;
-                actors[action.performer].muffled |= action.attributes->performer.muffled;
+                actors[action.performer].merge(action.attributes->performer);
             }
         }
     }
@@ -200,38 +199,59 @@ namespace Graph {
     }
 
     int Node::findAction(std::string type) {
-        return findAction([type](Action action) { return action.type == type; });
+        return findAction([type](Action action) { return action.isType(type); });
     }
 
     int Node::findAnyAction(std::vector<std::string> types) {
-        return findAction([types](Action action) { return VectorUtil::contains(types, action.type); });
+        return findAction([types](Action action) { return action.isType(types); });
     }
 
     int Node::findActionForActor(int position, std::string type) {
-        return findAction([position, type](Action action) {return action.actor == position && action.type == type;});
+        return findAction([position, type](Action action) {return action.actor == position && action.isType(type);});
     }
 
     int Node::findAnyActionForActor(int position, std::vector<std::string> types) {
-        return findAction([position, types](Action action) {return action.actor == position && VectorUtil::contains(types, action.type);});
+        return findAction([position, types](Action action) {return action.actor == position && action.isType(types);});
     }
 
     int Node::findActionForTarget(int position, std::string type) {
-        return findAction([position, type](Action action) {return action.target == position && action.type == type;});
+        return findAction([position, type](Action action) {return action.target == position && action.isType(type);});
     }
 
     int Node::findAnyActionForTarget(int position, std::vector<std::string> types) {
-        return findAction([position, types](Action action) {return action.target == position && VectorUtil::contains(types, action.type);});
+        return findAction([position, types](Action action) {return action.target == position && action.isType(types);});
     }
 
     int Node::findActionForActorAndTarget(int actorPosition, int targetPosition, std::string type) {
-        return findAction([actorPosition, targetPosition, type](Action action) {return action.actor == actorPosition && action.target == targetPosition && action.type == type;});
+        return findAction([actorPosition, targetPosition, type](Action action) {return action.actor == actorPosition && action.target == targetPosition && action.isType(type);});
     }
 
     int Node::findAnyActionForActorAndTarget(int actorPosition, int targetPosition, std::vector<std::string> types) {
-        return findAction([actorPosition, targetPosition, types](Action action) {return action.actor == actorPosition && action.target == targetPosition && VectorUtil::contains(types, action.type);});
+        return findAction([actorPosition, targetPosition, types](Action action) {return action.actor == actorPosition && action.target == targetPosition && action.isType(types);});
     }
 
+
+    int Node::getPrimaryPartner(int position) {
+        for (Action& action : actions) {
+            if (action.actor == position) {
+                return action.target;
+            }
+            if (action.target == position) {
+                return action.actor;
+            }
+        }
+
+        return -1;
+    }
+
+
     std::vector<Trait::FacialExpression*>* Node::getFacialExpressions(int position) {
+        if (actors[position].underlyingExpression != "") {
+            if (auto expressions = Trait::TraitTable::getExpressionsForSet(actors[position].underlyingExpression)) {
+                return expressions;
+            }
+        }
+
         if (actors[position].expressionAction != -1 && actors[position].expressionAction < actions.size()) {
             auto& action = actions[actors[position].expressionAction];
             if (action.target == position) {

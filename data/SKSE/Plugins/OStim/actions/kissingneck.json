@@ -1,7 +1,12 @@
 {
+	"aliases":[
+		"kissneck"
+	],
 	"actor":{
+		"info": "the one with the mouth",
 		"stimulation":0.1,
 		"maxStimulation":50,
+		"moan":true,
 		"muffled":true,
 		"requirements":[
 			"mouth"
@@ -11,13 +16,40 @@
 			31,
 			44,
 			55
+		],
+		"faction":[
+			{
+				"info": "OStimKissingNeckActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE75"
+			},
+			{
+				"info": "OStimAnyKissingActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEC7"
+			}
 		]
 	},
 	"target":{
+		"info": "the one with the neck",
 		"stimulation":0.1,
 		"maxStimulation":50,
+		"moan":true,
+		"talk":true,
 		"strippingSlots":[
 			45
+		],
+		"faction":[
+			{
+				"info": "OStimKissingNeckTargetFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE76"
+			},
+			{
+				"info": "OStimAnyKissingTargetFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEC8"
+			}
 		]
 	},
 	"tags":[

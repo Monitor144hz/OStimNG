@@ -1,17 +1,46 @@
 {
+	"aliases":[
+		"gropeass",
+		"gropebooty",
+		"gropebutt",
+		"gropingass",
+		"gropingbooty",
+		"holdass",
+		"holdbooty",
+		"holdbutt",
+		"holdingass",
+		"holdingbooty",
+		"holdingbutt"
+	],
 	"actor":{
+		"info": "the one with the hands",
 		"stimulation":0.1,
 		"maxStimulation":50,
+		"moan": true,
+		"talk": true,
 		"requirements":[
 			"hand"
 		],
 		"strippingSlots":[
 			33
-		]
+		],
+		"faction":{
+			"info": "OStimGropingButtActorFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE6C"
+		}
 	},
 	"target":{
+		"info": "the one with the butt",
 		"stimulation":0.1,
-		"maxStimulation":50
+		"maxStimulation":50,
+		"moan": true,
+		"talk": true,
+		"faction":{
+			"info": "OStimGropingButtTargetFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE6D"
+		}
 	},
 	"performer":{
 		"floats":{

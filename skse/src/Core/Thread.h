@@ -27,6 +27,8 @@ namespace OStim {
 
         void initContinue();
 
+        inline ThreadFlags getThreadFlags() { return threadFlags; }
+
         inline Graph::Node* getCurrentNode() { return m_currentNode; }
         inline int getCurrentSpeed() { return m_currentNodeSpeed; }
 
@@ -49,7 +51,7 @@ namespace OStim {
 
         void loop();
 
-        inline std::map<int32_t, ThreadActor> getActors() { return m_actors; }
+        inline std::map<int32_t, ThreadActor>& getActors() { return m_actors; }
 
         ThreadActor* GetActor(GameAPI::GameActor a_actor);
         ThreadActor* GetActor(int a_position);
@@ -58,6 +60,8 @@ namespace OStim {
         void SetSpeed(int speed);
         bool increaseSpeed();
         bool decreaseSpeed();
+        inline int getSpeed() { return m_currentNodeSpeed; }
+        inline float getRelativeSpeed() { return m_currentNode ? static_cast<float>(m_currentNodeSpeed) / static_cast<float>(m_currentNode->speeds.size()) : 0; }
 
         float getMaxExcitement();
 
@@ -74,6 +78,8 @@ namespace OStim {
         Serialization::OldThread serialize();
 
     private:
+        ThreadFlags threadFlags = 0;
+
         Graph::Node* m_currentNode = nullptr;
         bool playerThread = false;
         std::map<int32_t, ThreadActor> m_actors;
@@ -180,6 +186,14 @@ namespace OStim {
         std::queue<Graph::SequenceEntry> nodeQueue;
 
         void clearNodeQueue();
+#pragma endregion
+
+#pragma region sound
+    public:
+        bool isAnyActorTalking();
+
+    private:
+        bool playingClimaxSound = false;
 #pragma endregion
     };
 

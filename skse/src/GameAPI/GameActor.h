@@ -2,6 +2,7 @@
 
 #include "GameActorBone.h"
 #include "GameActorValue.h"
+#include "GameDialogue.h"
 #include "GameFaction.h"
 #include "GameKeyword.h"
 #include "GamePosition.h"
@@ -23,7 +24,9 @@ namespace GameAPI {
         inline uint32_t getBaseFormID() const { return form->GetActorBase()->formID; }
 
         void update3D() const;
-        bool isLoaded() const { return form->Is3DLoaded(); }
+        inline bool isLoaded() const { return form->Is3DLoaded(); }
+        inline bool isDisabled() const { return form->IsDisabled(); }
+        inline bool isDeleted() const { return form->IsMarkedForDeletion() || form->IsDeleted(); }
         inline void updateAI() const { form->EvaluatePackage(); }
         void lock() const;
         void unlock() const;
@@ -68,7 +71,6 @@ namespace GameAPI {
         int getFactionRank(GameFaction faction) const;
 
         int getRelationshipRank(GameActor other) const;
-        inline bool isInDialogue() const { return IsInDialogueWithPlayer(nullptr, 0, form); }
         inline bool isInCombat() const { return form->IsInCombat(); }
         void sheatheWeapon() const;
         inline bool isDead() const { return form->IsDead(); }
@@ -76,7 +78,13 @@ namespace GameAPI {
 
         inline GameActorBone getBone(std::string bone) const { return form->GetNodeByName(bone); }
 
-        std::vector<GameActor> getNearbyActors(float radius, std::function<bool(GameActor)> condition);
+        inline bool isInDialogue() const { return IsInDialogueWithPlayer(nullptr, 0, form); }
+        inline bool isTalking() const { return form->GetActorRuntimeData().voiceTimer > 0; }
+        void sayTo(GameActor target, GameDialogue dialogue) const;
+        inline bool hasLight() const { return form->AsMagicTarget()->HasEffectWithArchetype(RE::MagicTarget::Archetype::kLight); }
+        inline double getLightLevel() const { return GetLightLevel(form); }
+
+        std::vector<GameActor> getNearbyActors(float radius, std::function<bool(GameActor)> condition) const;
 
     private:
         inline static bool IsInDialogueWithPlayer(RE::BSScript::IVirtualMachine* vm, RE::VMStackID stackID, RE::TESObjectREFR* object) {
@@ -128,10 +136,16 @@ namespace GameAPI {
         }
 
         inline static void TranslateTo(RE::BSScript::IVirtualMachine* vm, RE::VMStackID stackID, RE::TESObjectREFR* object, float afX, float afY, float afZ, float afAngleX, float afAngleY, float afAngleZ, float afSpeed, float afMaxRotationSpeed) {
-        using func_t = decltype(TranslateTo);
-        REL::Relocation<func_t> func{RELOCATION_ID(55706, 56237)};
-        func(vm, stackID, object, afX, afY, afZ, afAngleX, afAngleY, afAngleZ, afSpeed, afMaxRotationSpeed);
-    }
+            using func_t = decltype(TranslateTo);
+            REL::Relocation<func_t> func{RELOCATION_ID(55706, 56237)};
+            func(vm, stackID, object, afX, afY, afZ, afAngleX, afAngleY, afAngleZ, afSpeed, afMaxRotationSpeed);
+        }
+
+        inline static double GetLightLevel(RE::Actor* actor) {
+            using func_t = decltype(GetLightLevel);
+            REL::Relocation<func_t> func{RELOCATION_ID(36759, 37775)};
+            return func(actor);
+        }
 
         inline static void SetPosition(RE::TESObjectREFR* object, float x, float y, float z) { object->SetPosition(x, y, z); }
     };

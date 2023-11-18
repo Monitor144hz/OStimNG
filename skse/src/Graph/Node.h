@@ -53,10 +53,13 @@ namespace Graph {
         std::vector<Navigation> navigations;
         std::string modpack = "";
 
+        void tryAddTag(std::string tag);
         void mergeActionsIntoActors();
 
         bool fulfilledBy(std::vector<Trait::ActorCondition> conditions);
         bool hasSameActorTpyes(Node* other);
+
+        int getPrimaryPartner(int position);
 
         std::vector<Trait::FacialExpression*>* getFacialExpressions(int position);
         std::vector<Trait::FacialExpression*>* getOverrideExpressions(int position);

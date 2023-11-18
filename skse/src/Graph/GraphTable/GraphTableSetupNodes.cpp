@@ -2,6 +2,7 @@
 
 #include "Furniture/FurnitureTable.h"
 #include "Util/JsonFileLoader.h"
+#include "Util/JsonUtil.h"
 #include "Util/StringUtil.h"
 #include "Util/VectorUtil.h"
 
@@ -38,7 +39,7 @@ namespace Graph {
 
             if (json.contains("length")) {
                 if (json["length"].is_number()) {
-                    node->animationLengthMs = static_cast<int>(json["length"] * 1000.0f);
+                    node->animationLengthMs = static_cast<int>(static_cast<float>(json["length"]) * 1000.0f);
                 } else {
                     logger::warn("length property of scene {} isn't a number", node->scene_id);
                 }
@@ -294,7 +295,10 @@ namespace Graph {
                     int index = 0;
                     for (auto& jsonActor : json["actors"]) {
                         Graph::GraphActor actor;
+
                         if (jsonActor.is_object()) {
+                            std::string objectType = "actor " + std::to_string(index) + " of scene";
+
                             if (jsonActor.contains("type")) {
                                 if (jsonActor["type"].is_string()) {
                                     actor.condition.type = jsonActor["type"];
@@ -327,33 +331,14 @@ namespace Graph {
                                 }
                             }
 
-                            if (jsonActor.contains("scaleHeight")) {
-                                if (jsonActor["scaleHeight"].is_number()) {
-                                    actor.scaleHeight = jsonActor["scaleHeight"];
-                                } else {
-                                    logger::warn("scaleHeight property of actor {} of scene {} isn't a number", index, node->scene_id);
-                                }
-                            }
-
-                            if (jsonActor.contains("expressionOverride")) {
-                                if (jsonActor["expressionOverride"].is_string()) {
-                                    actor.expressionOverride = jsonActor["expressionOverride"];
-                                } else {
-                                    logger::warn("expressionOverride property of actor {} of scene {} isn't a string", index, node->scene_id);
-                                }
-                            }
-
-                            if(jsonActor.contains("expressionAction")) {
-                                if (jsonActor["expressionAction"].is_number_integer()) {
-                                    actor.expressionAction = jsonActor["expressionAction"];
-                                } else {
-                                    logger::warn("expressionAction property of actor {} of scene {} isn't an integer", index, node->scene_id);
-                                }
-                            }
+                            JsonUtil::loadFloat(jsonActor, actor.scaleHeight, "scaleHeight", node->scene_id, objectType, false);
+                            JsonUtil::loadString(jsonActor, actor.underlyingExpression, "underlyingExpression", node->scene_id, objectType, false);
+                            JsonUtil::loadString(jsonActor, actor.expressionOverride, "expressionOverride", node->scene_id, objectType, false);
+                            JsonUtil::loadInt(jsonActor, actor.expressionAction, "expressionAction", node->scene_id, objectType, false);
 
                             if (jsonActor.contains("animationIndex")) {
                                 if (jsonActor["animationIndex"].is_number_integer()) {
-                                    actor.animationIndex = json["animationIndex"];
+                                    actor.animationIndex = jsonActor["animationIndex"];
                                 } else {
                                     actor.animationIndex = index;
                                     logger::warn("animationIndex property of actor {} of scene {} isn't an integer", index, node->scene_id);
@@ -361,6 +346,8 @@ namespace Graph {
                             } else {
                                 actor.animationIndex = index;
                             }
+                            
+                            JsonUtil::loadBool(jsonActor, actor.noStrip, "noStrip", node->scene_id, objectType, false);
 
                             // TODO: this is too skyrim specific
                             if (jsonActor.contains("lookUp")) {
@@ -477,7 +464,7 @@ namespace Graph {
                         if (jsonAction.is_object()) {
                             if (jsonAction.contains("type")) {
                                 if (jsonAction["type"].is_string()) {
-                                    action.type = jsonAction["type"];
+                                    action.type = getActionAlias(jsonAction["type"]);
                                     StringUtil::toLower(&action.type);
                                 } else {
                                     logger::warn("property type of action {} of scene {} isn't a string", index, node->scene_id);
@@ -515,6 +502,14 @@ namespace Graph {
                             } else {
                                 action.performer = action.actor;
                             }
+
+                            if (jsonAction.contains("muted")) {
+                                if (jsonAction["muted"].is_boolean()) {
+                                    action.muted = jsonAction["muted"];
+                                } else {
+                                    logger::warn("property muted of action {} of scene {} isn't a boolean", index, node->scene_id);
+                                }
+                            }
                         } else {
                             logger::warn("action {} of scene {} is malformed", index, node->scene_id);
                         }
@@ -524,6 +519,34 @@ namespace Graph {
                     }
                 } else {
                     logger::warn("actions property of scene {} isn't a list", node->scene_id);
+                }
+            }
+
+            if (node->isTransition) {
+                node->tryAddTag("transition");
+            }
+
+            if (node->actors.size() >= 2) {
+                bool gay = true;
+                bool lesbian = true;
+
+                for (GraphActor actor : node->actors) {
+                    if (actor.condition.sex != GameAPI::GameSex::MALE) {
+                        gay = false;
+                    }
+                    if (actor.condition.sex != GameAPI::GameSex::FEMALE) {
+                        lesbian = false;
+                    }
+
+                    if (!gay && !lesbian) {
+                        break;
+                    }
+                }
+
+                if (gay) {
+                    node->tryAddTag("gay");
+                } else if (lesbian) {
+                    node->tryAddTag("lesbian");
                 }
             }
 

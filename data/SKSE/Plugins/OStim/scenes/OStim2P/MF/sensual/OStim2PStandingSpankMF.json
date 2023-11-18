@@ -1,0 +1,39 @@
+{
+	"name": "Standing Spank Straight",
+	"modpack": "OStim",
+	"length": 2.666,
+	"speeds":[
+		{
+			"animation": "OStim2PStandingSpankMF"
+		}
+	],
+	"destination": "OStim2PStandingSpankIdleMF",
+	"actors":[
+		{
+			"intendedSex": "male",
+			"sosBend": 7,
+			"scale": 1.03,
+      		"lookUp": -50,
+			"tags": [
+				"standing"
+			],
+			"feetOnGround": true
+		},
+		{
+			"intendedSex": "female",
+      		"lookUp": -30,
+      		"lookLeft": 75,
+			"tags": [
+				"standing"
+			],
+			"feetOnGround": true
+		}
+	],
+	"actions":[
+		{
+			"type": "holdingbody",
+			"actor": 0,
+			"target": 1
+		}
+	]
+}

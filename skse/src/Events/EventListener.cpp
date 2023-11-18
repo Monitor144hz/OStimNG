@@ -7,11 +7,12 @@
 #include "GameAPI/Game.h"
 #include "GameAPI/GameCamera.h"
 #include "GameAPI/GameTable.h"
+#include "MCM/MCMTable.h"
 #include "Serial/Manager.h"
 #include "UI/Align/AlignMenu.h"
 #include "UI/UIState.h"
+#include "Util/Globals.h"
 #include "Util/MathUtil.h"
-#include "MCM/MCMTable.h"
 #include "Util.h"
 
 namespace Events {
@@ -20,15 +21,7 @@ namespace Events {
 
         Serialization::closeOldThreads();
 
-        OStim::ThreadBuilder::reset();
-
-        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
-        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
-        if (vm) {
-            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback(new CheckPapyrusUndressingCallbackFunctor());
-            auto args = RE::MakeFunctionArguments();
-            vm->DispatchStaticCall("OUndress", "UsePapyrusUndressing", args, callback);
-        }
+        handleGameLoad();
 
         return RE::BSEventNotifyControl::kContinue;
     }
@@ -60,7 +53,7 @@ namespace Events {
             return RE::BSEventNotifyControl::kContinue;
         }
         
-        if (RE::UI::GetSingleton()->GameIsPaused()) {
+        if (RE::UI::GetSingleton()->GameIsPaused() && UI::UIState::GetSingleton()->GetActiveMenu() != UI::MenuType::kSearchMenu) {
             return RE::BSEventNotifyControl::kContinue;
         }
 
@@ -93,6 +86,10 @@ namespace Events {
             }
 
             if (keyCode == MCM::MCMTable::keySceneStart()) {
+                if (OStim::ThreadManager::GetSingleton()->playerThreadRunning()) {
+                    continue;
+                }
+
                 if (bEvent->IsDown()) {
                     GameAPI::GameActor player = GameAPI::GameActor::getPlayer();
                     GameAPI::GameActor target = GameAPI::Game::getCrosshairActor();
@@ -172,5 +169,26 @@ namespace Events {
         }
 
         return RE::BSEventNotifyControl::kContinue;
+    }
+
+    
+    void EventListener::handleGameLoad() {
+        OStim::ThreadBuilder::reset();
+
+        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+        if (vm) {
+            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback(
+                new CheckPapyrusUndressingCallbackFunctor());
+            auto args = RE::MakeFunctionArguments();
+            vm->DispatchStaticCall("OUndress", "UsePapyrusUndressing", args, callback);
+        }
+
+        if (!Util::Globals::isSceneIntegrityVerified()) {
+            GameAPI::Game::showMessageBox(
+                "OStim Standalone: Scene integrity could not be verified. OStim and its addons might not work "
+                "properly. Please don't report any other bugs while this issue persists.",
+                {"Ok"}, [](unsigned int result) {});
+        }
     }
 }

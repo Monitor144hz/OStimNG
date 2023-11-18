@@ -1,0 +1,63 @@
+{
+	"info": "kissingcheek refers to the cheek in the face, not the buttcheek",
+	"aliases":[
+		"kisscheek",
+		"kisscheeks",
+		"kissingcheeks"
+	],
+	"actor":{
+		"info": "the one with the mouth",
+		"stimulation":0.1,
+		"maxStimulation":25,
+		"moan": true,
+		"muffled":true,
+		"requirements":[
+			"mouth"
+		],
+		"strippingSlots":[
+			30,
+			44,
+			55
+		],
+		"faction":[
+			{
+				"info": "OStimKissingCheekActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEC3"
+			},
+			{
+				"info": "OStimAnyKissingActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEC7"
+			}
+		]
+	},
+	"target":{
+		"info": "the one with the cheek",
+		"stimulation":0.1,
+		"maxStimulation":25,
+		"moan": true,
+		"talk": true,
+		"strippingSlots":[
+			30,
+			44,
+			55
+		],
+		"faction":[
+			{
+				"info": "OStimKissingCheekTargetFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEC4"
+			},
+			{
+				"info": "OStimAnyKissingTargetFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEC8"
+			}
+		]
+	},
+	"tags":[
+		"romantic",
+		"sensual"
+	]
+}

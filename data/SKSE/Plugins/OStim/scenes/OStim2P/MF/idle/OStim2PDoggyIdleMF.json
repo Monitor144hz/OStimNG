@@ -1,0 +1,57 @@
+{
+	"name": "Doggy Idle Straight",
+	"modpack": "OStim",
+	"length": 2.0,
+	"speeds":[
+		{
+			"animation": "OStim2PDoggyIdleMF"
+		}
+	],
+	"navigations":[
+		{
+			"destination": "OStim2PStandingApartMF",
+			"description": "stand up",
+			"icon": "OStim/positional/standup_m"
+		},
+		{
+			"destination": "OStim2PStandingApartToSittingMF",
+			"description": "sit down",
+			"icon": "OStim/positional/squatting_f"
+		},
+		{
+			"destination": "OStim2PLyingOnTopMF",
+			"description": "lie on {1}",
+			"icon": "OStim/positional/lyingback_f"
+		},
+		{
+			"destination": "OStim2PBothLyingMF",
+			"description": "lie down",
+			"icon": "OStim/positional/lyingback_m"
+		}
+	],
+	"tags":[
+		"idle"
+	],
+	"actors":[
+		{
+			"intendedSex": "male",
+			"sosBend": 2,
+			"scale": 1.03,
+      		"lookUp": -50,
+			"tags": [
+				"kneeling"
+			],
+			"feetOnGround": false
+		},
+		{
+			"intendedSex": "female",
+      		"lookUp": -100,
+      		"lookLeft": 30,
+			"tags": [
+				"allfours",
+				"facingaway"
+			],
+			"feetOnGround": false
+		}
+	]
+}

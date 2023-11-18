@@ -3,33 +3,69 @@
 #include "Core/Thread.h"
 
 #include "GameAPI/Game.h"
+#include "Util/APITable.h"
 #include "Util/CameraUtil.h"
 
 namespace OStim {
-    void ThreadActor::orgasm(bool ignoreStall) {
-        excitement = 100;
+    void ThreadActor::loopClimax() {
+        if (awaitingOrgasm) {
+            if (!stallClimax && !thread->getStallClimax()) {
+                orgasm(false);
+            }
+        } else if (awaitingClimaxInner) {
+            if (!lastMoan && !actor.isTalking()) {
+                climaxInner();
+            }
+        }
+    }
 
-        if (!ignoreStall && (stallClimax || thread->getStallClimax())) {
+    void ThreadActor::orgasm(bool ignoreStall) {
+        if (awaitingOrgasm || awaitingClimax) {
             return;
         }
 
+        excitement = 100;
+
+        if (!ignoreStall && (stallClimax || thread->getStallClimax())) {
+            awaitingOrgasm = true;
+            setTimeUntilClimax(0.0f);
+            return;
+        }
+
+        awaitingOrgasm = false;
+
         if (thread->autoTransition(index, "climax")) {
             awaitingClimax = true;
+            setTimeUntilClimax(0.0f);
         } else {
             climax();
         }
     }
 
     void ThreadActor::climax() {
+        awaitingClimax = false;
+        setTimeUntilClimax(0.0f);
+
+        if (lastMoan || actor.isTalking()) {
+            awaitingClimaxInner = true;
+        } else {
+            climaxInner();
+        }
+    }
+
+    void ThreadActor::climaxInner() {
+        awaitingClimaxInner = false;
         excitement = -3;
 
-        awaitingClimax = false;
         timesClimaxed++;
+        actor.setFactionRank(Util::APITable::getTimesClimaxedFaction(), timesClimaxed);
 
-        if (!muted && voiceSet && voiceSet->climax) {
-            playEventExpression(voiceSet->climaxExpression);
-            voiceSet->climax.play(actor, MCM::MCMTable::getMoanVolume());
+        if (schlong) {
+            thread->SetSpeed(0);
         }
+        actor.damageActorValue(GameAPI::GameActorValues::STAMINA, 250);
+
+        playClimaxSound();
 
         if (thread->isPlayerThread()) {
             // TODO properly use GameActor here
@@ -59,16 +95,7 @@ namespace OStim {
         // TODO properly use GameActor here
         FormUtil::sendModEvent(actor.form, "ostim_actor_orgasm", thread->getCurrentNode()->scene_id, thread->m_threadId);
 
-        actor.damageActorValue(GameAPI::GameActorValues::STAMINA, 250);
-
         // todo give other actor excitement when in vaginalsex
-
-        if (schlong) {
-            // TODO enable for player when we have our own UI
-            if (!thread->isPlayerThread()) {
-                thread->SetSpeed(0);
-            }
-        }
 
         if (MCM::MCMTable::endOnAllOrgasm()) {
             bool end = true;
@@ -85,8 +112,7 @@ namespace OStim {
             if (isPlayer && MCM::MCMTable::endOnPlayerOrgasm()) {
                 thread->setStopTimer(4000);
             }
-            if ((!female || schlong && MCM::MCMTable::futaUseMaleClimax()) ? MCM::MCMTable::endOnMaleOrgasm()
-                                                                           : MCM::MCMTable::endOnFemaleOrgasm()) {
+            if ((!female || schlong && MCM::MCMTable::futaUseMaleClimax()) ? MCM::MCMTable::endOnMaleOrgasm() : MCM::MCMTable::endOnFemaleOrgasm()) {
                 thread->setStopTimer(4000);
             }
         }
@@ -95,5 +121,16 @@ namespace OStim {
         }
 
         thread->setAutoModeToMainStage();
+    }
+
+    void ThreadActor::setTimeUntilClimax(float time) {
+        timeUntilClimax = time;
+        if (timeUntilClimax < 0) {
+            actor.setFactionRank(Util::APITable::getTimeUntilClimaxFaction(), -1);
+        } else if (timeUntilClimax > 100.0f){
+            actor.setFactionRank(Util::APITable::getTimeUntilClimaxFaction(), 101);
+        } else {
+            actor.setFactionRank(Util::APITable::getTimeUntilClimaxFaction(), static_cast<int>(timeUntilClimax));
+        }
     }
 }

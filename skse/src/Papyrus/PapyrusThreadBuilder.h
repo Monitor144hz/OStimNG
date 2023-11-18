@@ -43,6 +43,15 @@ namespace PapyrusThreadBuilder {
         params->furniture = furniture;
     }
 
+    void SetDuration(RE::StaticFunctionTag*, int builderID, float duration) {
+        OStim::ThreadStartParams* params = OStim::ThreadBuilder::get(builderID);
+        if (!params) {
+            return;
+        }
+
+        params->duration = duration * 1000.0f;
+    }
+
     void SetStartingAnimation(RE::StaticFunctionTag*, int builderID, std::string animation) {
         OStim::ThreadStartParams* params = OStim::ThreadBuilder::get(builderID);
         if (!params) {
@@ -51,6 +60,7 @@ namespace PapyrusThreadBuilder {
 
         Graph::Node* node = Graph::GraphTable::getNodeById(animation);
         if (!node) {
+            logger::warn("animation {} could not be found", animation);
             return;
         }
 
@@ -65,6 +75,7 @@ namespace PapyrusThreadBuilder {
 
         Graph::Sequence* sequencePtr = Graph::GraphTable::getSequenceByID(sequence);
         if (!sequencePtr) {
+            logger::warn("sequence {} could not be found", sequence);
             return;
         }
 
@@ -95,7 +106,25 @@ namespace PapyrusThreadBuilder {
             return;
         }
 
-        params->noAutoMode = true;
+        params->threadFlags |= OStim::ThreadFlag::NO_AUTO_MODE;
+    }
+
+    void NoPlayerControl(RE::StaticFunctionTag*, int builderID) {
+        OStim::ThreadStartParams* params = OStim::ThreadBuilder::get(builderID);
+        if (!params) {
+            return;
+        }
+
+        params->threadFlags |= OStim::ThreadFlag::NO_PLAYER_CONTROL;
+    }
+
+    void NoUndressing(RE::StaticFunctionTag*, int builderID) {
+        OStim::ThreadStartParams* params = OStim::ThreadBuilder::get(builderID);
+        if (!params) {
+            return;
+        }
+
+        params->threadFlags |= OStim::ThreadFlag::NO_UNDRESSING;
     }
 
     void NoFurniture(RE::StaticFunctionTag*, int builderID) {
@@ -151,11 +180,14 @@ namespace PapyrusThreadBuilder {
         BIND(Create);
         BIND(SetDominantActors);
         BIND(SetFurniture);
+        BIND(SetDuration);
         BIND(SetStartingAnimation);
         BIND(SetStartingSequence);
         BIND(EndAfterSequence);
         BIND(UndressActors);
         BIND(NoAutoMode);
+        BIND(NoPlayerControl);
+        BIND(NoUndressing);
         BIND(SetMetadata);
         BIND(SetMetadataCSV);
 

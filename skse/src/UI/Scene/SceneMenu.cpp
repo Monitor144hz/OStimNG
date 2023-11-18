@@ -21,13 +21,27 @@ namespace UI::Scene {
 
             OverrideFunction(settings, new doShowAlignMenu, "doShowAlignment");
             OverrideFunction(settings, new doShowSearchMenu, "doShowSearch");
+
+            RE::GFxValue args[1]{ UI::Settings::fadeTime };
+            optionBoxes.Invoke("SetSettings", nullptr, args, 1);
         });
     }
 
 	void SceneMenu::Show() {
         OStimMenu::Show();
         ApplyPositions();
+        //Hide HUD
+        auto hudMenu = RE::UI::GetSingleton()->GetMenu(RE::HUDMenu::MENU_NAME);
+        if (hudMenu) {
+            auto& movie = hudMenu->uiMovie;
+            RE::GFxValue args[6]{false, "", false, true, false, false};
+            movie->Invoke("_root.HUDMovieBaseInstance.SetCrosshairTarget", nullptr, args, 6);
+        }
 	}
+
+    void SceneMenu::Hide() {
+        OStimMenu::Hide();
+    }
 
     void SceneMenu::SendControl(int32_t control) {
         QueueUITask([this, control]() {
@@ -99,12 +113,10 @@ namespace UI::Scene {
         auto currentNode = state->currentNode;
         if (!state->currentNode)
             return;
-        if (currentNode->isTransition || state->currentThread->areNodesQueued()) {
+        if (currentNode->isTransition || state->currentThread->isInSequence() || (state->currentThread->getThreadFlags() & OStim::ThreadFlag::NO_PLAYER_CONTROL) == OStim::ThreadFlag::NO_PLAYER_CONTROL) {
             menuData.options.clear();
         } else {
-            logger::info("before building conditions");
             std::vector<Trait::ActorCondition> conditions = state->currentThread->getActorConditions();
-            logger::info("after building conditions");
             for (auto& nav : currentNode->navigations) {
                 if (nav.fulfilledBy(conditions) && state->currentThread->getFurnitureType()->isChildOf(nav.nodes.back()->furnitureType)) {
                     menuData.options.push_back(
@@ -137,7 +149,6 @@ namespace UI::Scene {
                 auto speed = thread->getCurrentSpeed();
                 auto& speedObj = node->speeds[speed];
                 const std::string speedStr = std::to_string(speedObj.displaySpeed);
-                logger::info("{}"sv, speedStr);
                 RE::GFxValue args[3]{ RE::GFxValue{ speedStr }, speed != (node->speeds.size() - 1), speed != 0 };
                 optionBoxes.Invoke("ShowSpeed", nullptr, args, 3);
             }

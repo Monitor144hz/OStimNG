@@ -1,20 +1,61 @@
 {
+	"aliases":[
+		"gropeboob",
+		"gropeboobs",
+		"gropebreast",
+		"gropebreasts",
+		"gropetit",
+		"gropetits",
+		"gropingboob",
+		"gropingboobs",
+		"gropingbreasts",
+		"gropingtit",
+		"gropingtits",
+		"holdboob",
+		"holdboobs",
+		"holdbreast",
+		"holdbreasts",
+		"holdingboob",
+		"holdingboobs",
+		"holdingbreast",
+		"holdingbreasts",
+		"holdingtit",
+		"holdingtits",
+		"holdtit",
+		"holdtits"
+	],
 	"actor":{
+		"info": "the one with the hands",
 		"stimulation":0.1,
 		"maxStimulation":50,
+		"moan": true,
+		"talk": true,
 		"requirements":[
 			"hand"
 		],
 		"strippingSlots":[
 			33
-		]
+		],
+		"faction":{
+			"info": "OStimGropingBreastActorFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE6A"
+		}
 	},
 	"target":{
+		"info": "the one with the boobs",
 		"stimulation":0.1,
 		"maxStimulation":50,
+		"moan": true,
+		"talk": true,
 		"requirements":[
 			"breast"
-		]
+		],
+		"faction":{
+			"info": "OStimGropingBreastTargetFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE6B"
+		}
 	},
 	"performer":{
 		"floats":{

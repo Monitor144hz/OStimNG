@@ -1,8 +1,14 @@
 {
+	"aliases":[
+		"buj",
+		"buttj"
+	],
 	"actor":{
+		"info": "the one with the butt",
 		"stimulation":0.1,
 		"maxStimulation":50,
 		"fullStrip":true,
+		"moan": true,
 		"talk":true,
 		"requirements":[
 		],
@@ -13,6 +19,11 @@
 			53,
 			54
 		],
+		"faction":{
+			"info": "OStimButtjobActorFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE58"
+		},
 		"stringLists":{
 			"cum":[
 				"butt"
@@ -20,6 +31,7 @@
 		}
 	},
 	"target":{
+		"info": "the one with the penis",
 		"stimulation":0.8,
 		"fullStrip":true,
 		"moan":true,
@@ -33,9 +45,19 @@
 			52,
 			53,
 			54
-		]
+		],
+		"faction":{
+			"info": "OStimButtjobTargetFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE59"
+		}
 	},
 	"performer":{
+		"faction":{
+			"info": "OStimButtjobPerformerFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE5A"
+		},
 		"floats":{
 			"stamina":0.75
 		}

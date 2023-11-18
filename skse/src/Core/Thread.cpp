@@ -18,6 +18,7 @@
 #include "Util/LookupTable.h"
 #include "Util/MathUtil.h"
 #include "MCM/MCMTable.h"
+#include "Util/APITable.h"
 #include "Util/LookupTable.h"
 #include "Util/ObjectRefUtil.h"
 #include "Util/StringUtil.h"
@@ -30,7 +31,7 @@ namespace OStim {
         }
 
         // --- setting up the vehicle --- //
-        this->center = furniture ? furniture.getPosition() : params.actors.front().getPosition();
+        this->center = furniture ? furniture.getPosition() : (playerThread ? GameAPI::GameActor::getPlayer().getPosition() : params.actors.front().getPosition());
 
         if (furniture) {
             furnitureType = Furniture::FurnitureTable::getFurnitureType(furniture, false);
@@ -53,6 +54,11 @@ namespace OStim {
         for (int i = 0; i < params.actors.size(); i++) {
             // TODO GameActor
             addActorInner(i, params.actors[i].form);
+        }
+
+        for (auto& [index, actor] : m_actors) {
+            actor.getActor().addToFaction(Util::APITable::getActorCountFaction());
+            actor.getActor().setFactionRank(Util::APITable::getActorCountFaction(), getActorCount());
         }
 
         if (furniture && MCM::MCMTable::resetClutter()) {
@@ -79,11 +85,13 @@ namespace OStim {
             }
         }
 
-        if (!params.noAutoMode) {
+        if ((params.threadFlags & ThreadFlag::NO_AUTO_MODE) == 0) {
             evaluateAutoMode();
         }
         
-        if (!playerThread) {
+        if (params.duration > 0) {
+            stopTimer = params.duration;
+        } else if (!playerThread) {
             stopTimer = MCM::MCMTable::npcSceneDuration();
         }
 
@@ -116,6 +124,15 @@ namespace OStim {
                 uiState->SetThread(this);
             }
             UI::Scene::SceneMenu::GetMenu()->Show();
+        }
+
+        if (!MCM::MCMTable::onlyLightInDark() || GetActor(0)->getActor().getLightLevel() < 20) {
+            logger::info("trying to add facelights");
+            for (auto& [index, actor] : m_actors) {
+                if (!actor.getActor().hasLight()) {
+                    actor.equipObject("light");
+                }
+            }
         }
 
         if (playerThread) {
@@ -219,13 +236,10 @@ namespace OStim {
 
 
             // --- undressing --- //
-            if (!m_currentNode->hasActorTag(actorIt.first, "nostrip")) {
+            if (actorIt.first < m_currentNode->actors.size() && !m_currentNode->actors[actorIt.first].noStrip) {
                 if (MCM::MCMTable::undressMidScene() && m_currentNode->doFullStrip(actorIt.first)) {
                     actorIt.second.undress();
                     actorIt.second.removeWeapons();
-                    // it is intended that the else fires if undressMidScene is checked but the action is not tagged as
-                    // sexual because some non sexual actions still have slots for partial stripping for example kissing
-                    // undresses helmets without being sexual
                 } else if (MCM::MCMTable::partialUndressing()) {
                     uint32_t slotMask = m_currentNode->getStrippingMask(actorIt.first);
                     if (slotMask != 0) {
@@ -252,6 +266,10 @@ namespace OStim {
         soundPlayers.clear();
 
         for (Graph::Action& action : m_currentNode->actions) {
+            if (action.muted) {
+                continue;
+            }
+
             for (Sound::SoundType* soundType : action.attributes->sounds) {
                 ThreadActor* actor = GetActor(action.actor);
                 ThreadActor* target = GetActor(action.target);
@@ -446,8 +464,8 @@ namespace OStim {
                     // TODO how to do this with GraphActor?
                     if (vm) {
                         RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
-                        auto args = RE::MakeFunctionArguments<RE::TESObjectREFR*>(std::move(actorIt.second.getActor().form));
-                        vm->DispatchStaticCall("NiOverride", "ApplyNodeOverrides", args, callback);
+                        auto args = RE::MakeFunctionArguments<RE::Actor*>(std::move(actorIt.second.getActor().form));
+                        vm->DispatchStaticCall("OSKSE", "ApplyNodeOverrides", args, callback);
                     }
                 }
             }
@@ -493,7 +511,7 @@ namespace OStim {
     void Thread::callEvent(std::string eventName, int actorIndex, int targetIndex, int performerIndex) {
         // legacy mod event
         if (playerThread && actorIndex == 0 && targetIndex == 1 && eventName == "spank") {
-            FormUtil::sendModEvent(GetActor(0)->getActor().form, "ostim_spank", "", 0);
+            FormUtil::sendModEvent(GetActor(1)->getActor().form, "ostim_spank", "", 0);
         }
 
         Graph::Event* graphEvent = Graph::GraphTable::getEvent(eventName);
@@ -501,8 +519,12 @@ namespace OStim {
             return;
         }
 
+        ThreadActor* actor = GetActor(actorIndex);
+        ThreadActor* target = GetActor(targetIndex);
+        ThreadActor* performer = GetActor(performerIndex);
+
         if (graphEvent->sound) {
-            graphEvent->sound.play(GetActor(actorIndex)->getActor(), MCM::MCMTable::getSoundVolume());
+            graphEvent->sound.play(actor->getActor(), MCM::MCMTable::getSoundVolume());
         }
 
         if (graphEvent->cameraShakeDuration > 0 && graphEvent->cameraShakeStrength > 0) {
@@ -513,25 +535,31 @@ namespace OStim {
             ControlUtil::rumbleController(graphEvent->cameraShakeStrength, graphEvent->cameraShakeDuration);
         }
 
-        if (graphEvent->actor.stimulation > 0.0) {
-            ThreadActor* actor = GetActor(actorIndex);
+        if (actor && graphEvent->actor.stimulation > 0.0) {
             if (actor->getExcitement() < graphEvent->actor.maxStimulation || actor->getExcitement() < actor->getMaxExcitement()) {
                 actor->addExcitement(graphEvent->actor.stimulation, true);
             }
         }
 
-        if (graphEvent->target.stimulation > 0.0) {
-            ThreadActor* target = GetActor(targetIndex);
+        if (target && graphEvent->target.stimulation > 0.0) {
             if (target->getExcitement() < graphEvent->target.maxStimulation || target->getExcitement() < target->getMaxExcitement()) {
                 target->addExcitement(graphEvent->target.stimulation, true);
             }
         }
 
-        if (graphEvent->performer.stimulation > 0.0) {
-            ThreadActor* performer = GetActor(performerIndex);
+        if (performer && graphEvent->performer.stimulation > 0.0) {
             if (performer->getExcitement() < graphEvent->performer.maxStimulation || performer->getExcitement() < performer->getMaxExcitement()) {
                 performer->addExcitement(graphEvent->performer.stimulation, true);
             }
+        }
+
+        if (actor && target) {
+            actor->reactToEvent(graphEvent->actor.reactionDelay, eventName, target->getActor(), [](Sound::VoiceSet& voiceSet){return &voiceSet.eventActorReactions;});
+            target->reactToEvent(graphEvent->target.reactionDelay, eventName, actor->getActor(), [](Sound::VoiceSet& voiceSet){return &voiceSet.eventTargetReactions;});
+        }
+
+        if (actor && performer) {
+            performer->reactToEvent(graphEvent->performer.reactionDelay, eventName, actor->getActor(), [](Sound::VoiceSet& voiceSet){return &voiceSet.eventPerformerReactions;});
         }
     }
 

@@ -1,0 +1,49 @@
+{
+	"aliases":[
+		"toying"
+	],
+	"actor":{
+		"info": "the one holding the toy",
+		"stimulation":0.1,
+		"maxStimulation":75,
+		"fullStrip":true,
+		"moan":true,
+		"talk":true,
+		"faction":{
+			"info": "OStimVaginalToyingActorFaction",
+			"mod": "OStim.esp",
+			"formid": "0xEA3"
+		}
+	},
+	"target":{
+		"info": "the one with the vulva",
+		"stimulation":1.0,
+		"fullStrip":true,
+		"moan":true,
+		"talk":true,
+		"requirements":[
+			"vagina"
+		],
+		"strippingSlots":[
+			32,
+			49,
+			52,
+			53,
+			54
+		],
+		"faction":{
+			"info": "OStimVaginalToyingTargetFaction",
+			"mod": "OStim.esp",
+			"formid": "0xEA4"
+		}
+	},
+	"performer":{
+		"floats":{
+			"stamina":0.75
+		}
+	},
+	"tags":[
+		"sexual",
+		"toy"
+	]
+}

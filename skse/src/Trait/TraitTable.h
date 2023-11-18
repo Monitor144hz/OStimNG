@@ -31,7 +31,6 @@ namespace Trait {
         static std::string getEquipObjectName(RE::FormID formID, std::string type);
         static void setEquipObjectID(RE::FormID formID, std::string type, std::string id);
 
-        inline static GameAPI::GameFaction getExcitementFaction() { return excitementFaction; }
         inline static bool areFacialExpressionsBlocked(RE::Actor* actor) { return actor->IsInFaction(noFacialExpressionsFaction); }
 
     private:
@@ -47,9 +46,9 @@ namespace Trait {
         inline static std::unordered_map<std::string, std::vector<FacialExpression*>*> expressionsByEvents;
         inline static std::unordered_map<std::string, std::vector<FacialExpression*>*> expressionsBySets;
 
-        inline static std::unordered_map <std::string, std::unordered_map<std::string, EquipObject*>> equipObjects;
+        inline static std::unordered_map<std::string, std::unordered_map<std::string, EquipObject*>> equipObjects;
+        inline static std::unordered_map<std::string, EquipObject*> defaultEquipObjects;
 
-        inline static GameAPI::GameFaction excitementFaction;
         inline static RE::TESFaction* noFacialExpressionsFaction;
     };
 }

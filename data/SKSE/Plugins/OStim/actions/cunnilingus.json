@@ -1,7 +1,10 @@
 {
+	"info": "cunnilingus is without a tongue, if you want a tongue use lickingvagina",
 	"actor":{
+		"info": "the one with the mouth",
 		"stimulation":0.1,
 		"maxStimulation":50,
+		"moan":true,
 		"muffled":true,
 		"expressionOverride":"openmouth",
 		"requirements":[
@@ -12,9 +15,22 @@
 			31,
 			44,
 			55
+		],
+		"faction":[
+			{
+				"info": "OStimCunnilingusActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE5B"
+			},
+			{
+				"info": "OStimAnyOralActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEA7"
+			}
 		]
 	},
 	"target":{
+		"info": "the one with the vulva",
 		"stimulation":1.4,
 		"fullStrip":true,
 		"moan":true,
@@ -28,24 +44,30 @@
 			52,
 			53,
 			54
+		],
+		"faction":[
+			{
+				"info": "OStimCunnilingusTargetFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE5C"
+			},
+			{
+				"info": "OStimAnyOralTargetFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEA8"
+			}
 		]
 	},
 	"performer":{
+		"faction":{
+			"info": "OStimCunnilingusPerformerFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE5D"
+		},
 		"floats":{
 			"stamina":0.75
 		}
 	},
-	"sounds":[
-		{
-			"type":"loop",
-			"sound":{
-				"mod":"OStim.esp",
-				"formid":"0xE15"
-			},
-			"muteWithActor": true,
-			"delay":1000
-		}	
-	],
 	"tags":[
 		"oral",
 		"sexual"

@@ -5,13 +5,6 @@ int UndressingSlotMask
 
 ; actor role settings
 
-; light settings
-String[] DomLightModeList
-String[] SubLightModeList
-
-String[] SubLightBrightList
-String[] DomLightBrightList
-
 ; ai control settings
 Int SetControlToggle
 
@@ -39,24 +32,6 @@ EndEvent
 
 Function Init()
 	Parent.OnGameReload()
-
-	DomLightModeList = new String[3]
-	DomLightModeList[0] = "$ostim_light_mode_none"
-	DomLightModeList[1] = "$ostim_light_mode_rear"
-	DomLightModeList[2] = "$ostim_light_mode_face"
-
-	SubLightModeList = new String[3]
-	SubLightModeList[0] = "$ostim_light_mode_none"
-	SubLightModeList[1] = "$ostim_light_mode_rear"
-	SubLightModeList[2] = "$ostim_light_mode_face"
-
-	SubLightBrightList = new String[2]
-	SubLightBrightList[0] = "$ostim_light_type_dim"
-	SubLightBrightList[1] = "Bright"
-
-	DomLightBrightList = new String[2]
-	DomLightBrightList[0] = "$ostim_light_type_dim"
-	DomLightBrightList[1] = "$ostim_light_type_bright"
 
 	playerref = game.getplayer()
 
@@ -90,6 +65,12 @@ EndFunction
 Event OnConfigRegister()
 	ImportSettings()
 endEvent
+
+Event OnConfigClose()
+	If Main.AutoExportSettings
+		ExportSettings()
+	EndIf
+EndEvent
 
 Event OnPageReset(String Page)
 	{Called when a new page is selected, including the initial empty page}
@@ -133,72 +114,52 @@ Event OnPageReset(String Page)
 		SetCursorFillMode(TOP_TO_BOTTOM)
 		SetCursorPosition(0)
 
-		AddTextOption("OStimNG ", "-")
+		AddTextOption("OStim Standalone ", "-")
 		
 		AddTextOption("", "")
 		AddColoredHeader("$ostim_authors")
-		AddTextOption("OStimNG ", "$ostim_by{Aietos, Kannonfodder}")
-		AddTextOption("- ", "$ostim_and{VersuchDrei}")
-		AddTextOption("OStim ", "$ostim_by{Sairion}")
-		AddTextOption("OSA ", "$ostim_by{CE0}")
-		AddTextOption("OpenSex ", "$ostim_by{Ace Animations}")
+		AddTextOption("OStim Standalone ", "$ostim_by{Kannonfodder, VersuchDrei}")
+		AddTextOption("OStim ", "$ostim_by{Nem, Qudix, Sairion}")
+		AddColoredHeader("$ostim_contributors")
+		AddTextOption("Code ", "$ostim_by{Aietos}")
+		AddTextOption("Icons ", "$ostim_by{Keed}")
+		AddTextOption("Sounds ", "$ostim_by{BigTittyBoy, Migal130}")
+		AddTextOption("Meshes ", "$ostim_by{Calyps, Egilvar}")
+		AddTextOption("Animations ", "$ostim_by{AceAnimations, Moon}")
+		AddTextOption("Facial Expressions", "$ostim_by{AceAnimations, GusCrow}")
 
 		SetCursorPosition(1)
 		AddTextOption("Powered By Sswaye's Reshade", "")
 
 		AddTextOption("", "")
 		AddColoredHeader("$ostim_links")
-		AddTextOption("discord.gg/ostim", "")
-		AddTextOption("https://github.com/VersuchDrei/OStim", "")
+		AddTextOption("https://discord.gg/ostimofficial", "")
+		AddTextOption("https://github.com/VersuchDrei/OStimNG", "")
 	EndIf
 EndEvent
 
-bool Function GetExternalBool(string modesp, int id)
-	;osexintegrationmain.console((game.GetFormFromFile(id, modesp) as GlobalVariable).GetValueInt())
-
-	return (game.GetFormFromFile(id, modesp) as GlobalVariable).GetValueInt() == 1
-
-endfunction
-
-Function SetExternalBool(string modesp, int id, bool val)
-	int set = 0
-	if val
-		set = 1
-	endif 
-
-	(game.GetFormFromFile(id, modesp) as GlobalVariable).SetValueInt(set)
-endfunction
-
-Function SetExternalInt(string modesp, int id, int val)
-	(game.GetFormFromFile(id, modesp) as GlobalVariable).SetValueInt(val)
-endfunction
-int Function GetExternalInt(string modesp, int id)
-	return (game.GetFormFromFile(id, modesp) as GlobalVariable).GetValueInt() 
-endfunction
-
-Function SetExternalfloat(string modesp, int id, float val)
-	(game.GetFormFromFile(id, modesp) as GlobalVariable).SetValue(val)
-endfunction
-float Function GetExternalfloat(string modesp, int id)
-	return (game.GetFormFromFile(id, modesp) as GlobalVariable).GetValue() 
-endfunction
-
-Event OnOptionHighlight(Int Option)
+Event OnOptionSelect(int Option)
 	if currPage == "$ostim_page_undress"
-		OnSlotMouseOver(option)
+		OnSlotSelect(Option)
+	EndIf
+EndEvent
+
+Event OnOptionHighlight(int Option)
+	if currPage == "$ostim_page_undress"
+		OnSlotMouseOver(Option)
 		Return
 	EndIf
 EndEvent
 
-Function OnSlotSelect(int option)
+Function OnSlotSelect(int Option)
 	int i = SlotSets.Length
 	While i
 		i -= 1
-		If SlotSets[i] == option
+		If SlotSets[i] == Option
 			int Mask = Math.Pow(2, i) as int
 			UndressingSlotMask = Math.LogicalXor(UndressingSlotMask, Mask)
 			OData.SetUndressingSlotMask(UndressingSlotMask)
-			SetToggleOptionValue(option, Math.LogicalAnd(UndressingSlotMask, Mask))
+			SetToggleOptionValue(Option, Math.LogicalAnd(UndressingSlotMask, Mask))
 
 			Return
 		EndIf
@@ -291,14 +252,12 @@ Function DrawGeneralPage()
 	SetCursorPosition(14)
 	AddColoredHeader("$ostim_header_lights")
 	SetCursorPosition(16)
-	AddMenuOptionST("OID_MaleLightMode", "$ostim_male_light_mode", DomLightModeList[Main.DomLightPos])
+	AddMenuOptionST("OID_MaleLightMode", "$ostim_male_light_mode", OData.GetEquipObjectName(0x0, "light"))
 	SetCursorPosition(18)
-	AddMenuOptionST("OID_MaleLightBrightness", "$ostim_male_light_brightness", DomLightBrightList[Main.DomLightBrightness])
+	AddMenuOptionST("OID_FemaleLightMode", "$ostim_female_light_mode", OData.GetEquipObjectName(0x1, "light"))
 	SetCursorPosition(20)
-	AddMenuOptionST("OID_FemaleLightMode", "$ostim_female_light_mode", DomLightModeList[Main.SubLightPos])
+	AddMenuOptionST("OID_PlayerLightMode", "$ostim_player_light_mode", OData.GetEquipObjectName(0x7, "light"))
 	SetCursorPosition(22)
-	AddMenuOptionST("OID_FemaleLightBrightness", "$ostim_female_light_brightness", DomLightBrightList[Main.SubLightBrightness])
-	SetCursorPosition(24)
 	AddToggleOptionST("OID_OnlyLightInDark", "$ostim_dark_light", Main.LowLightLevelLightsOnly)
 
 	SetCursorPosition(1)
@@ -313,6 +272,10 @@ Function DrawGeneralPage()
 	SetCursorPosition(11)
 	AddTextOptionST("OID_ImportSettings", "$ostim_import", "$ostim_done")
 	SetCursorPosition(13)
+	AddToggleOptionST("OID_AutoExportSettings", "$ostim_auto_export", Main.AutoExportSettings)
+	SetCursorPosition(15)
+	AddToggleOptionST("OID_AutoImportSettings", "$ostim_auto_import", Main.AutoImportSettings)
+	SetCursorPosition(17)
 	AddTextOptionST("OID_ResetSettings", "$ostim_import_default", "$ostim_done")
 EndFunction
 
@@ -386,37 +349,15 @@ State OID_MaleLightMode
 	EndEvent
 
 	Event OnMenuOpenST()
-		SetMenuDialogOptions(DomLightModeList)
+		OpenEquipObjectMenu(0x0, "light")
 	EndEvent
 
 	Event OnMenuAcceptST(int Index)
-		Main.DomLightPos = Index
-		SetMenuOptionValueST(DomLightModeList[Index])
+		SetEquipObjectID(0x0, "light", Index)
 	EndEvent
 
 	Event OnDefaultST()
-		Main.DomLightPos = 0
-		SetMenuOptionValueST(DomLightModeList[0])
-	EndEvent
-EndState
-
-State OID_MaleLightBrightness
-	Event OnHighlightST()
-		SetInfoText("$ostim_tooltip_male_light_brightness")
-	EndEvent
-
-	Event OnMenuOpenST()
-		SetMenuDialogOptions(DomLightBrightList)
-	EndEvent
-
-	Event OnMenuAcceptST(int Index)
-		Main.DomLightBrightness = Index
-		SetMenuOptionValueST(DomLightBrightList[Index])
-	EndEvent
-
-	Event OnDefaultST()
-		Main.DomLightBrightness = 0
-		SetMenuOptionValueST(DomLightBrightList[0])
+		SetEquipObjectIDToDefault(0x0, "light")
 	EndEvent
 EndState
 
@@ -426,37 +367,33 @@ State OID_FemaleLightMode
 	EndEvent
 
 	Event OnMenuOpenST()
-		SetMenuDialogOptions(DomLightModeList)
+		OpenEquipObjectMenu(0x1, "light")
 	EndEvent
 
 	Event OnMenuAcceptST(int Index)
-		Main.SubLightPos = Index
-		SetMenuOptionValueST(DomLightModeList[Index])
+		SetEquipObjectID(0x1, "light", Index)
 	EndEvent
 
 	Event OnDefaultST()
-		Main.SubLightPos = 0
-		SetMenuOptionValueST(DomLightModeList[0])
+		SetEquipObjectIDToDefault(0x1, "light")
 	EndEvent
 EndState
 
-State OID_FemaleLightBrightness
+State OID_PlayerLightMode
 	Event OnHighlightST()
-		SetInfoText("$ostim_tooltip_female_light_brightness")
+		SetInfoText("$ostim_tooltip_player_light_mode")
 	EndEvent
 
 	Event OnMenuOpenST()
-		SetMenuDialogOptions(DomLightBrightList)
+		OpenEquipObjectMenu(0x7, "light")
 	EndEvent
 
 	Event OnMenuAcceptST(int Index)
-		Main.SubLightBrightness = Index
-		SetMenuOptionValueST(DomLightBrightList[Index])
+		SetEquipObjectID(0x7, "light", Index)
 	EndEvent
 
 	Event OnDefaultST()
-		Main.SubLightBrightness = 0
-		SetMenuOptionValueST(DomLightBrightList[0])
+		SetEquipObjectIDToDefault(0x7, "light")
 	EndEvent
 EndState
 
@@ -501,6 +438,28 @@ State OID_ImportSettings
 
 	Event OnSelectST()
 		ImportSettings()
+	EndEvent
+EndState
+
+State OID_AutoExportSettings
+	Event OnHighlightST()
+		SetInfoText("$ostim_tooltip_auto_export")
+	EndEvent
+
+	Event OnSelectST()
+		Main.AutoExportSettings = !Main.AutoExportSettings
+		SetToggleOptionValueST(Main.AutoExportSettings)
+	EndEvent
+EndState
+
+State OID_AutoImportSettings
+	Event OnHighlightST()
+		SetInfoText("$ostim_tooltip_auto_import")
+	EndEvent
+
+	Event OnSelectST()
+		Main.AutoImportSettings = !Main.AutoImportSettings
+		SetToggleOptionValueST(Main.AutoImportSettings)
 	EndEvent
 EndState
 
@@ -1606,7 +1565,7 @@ Function DrawGenderRolesPage()
 	SetCursorPosition(0)
 	AddColoredHeader("$ostim_header_animation_settings")
 	SetCursorPosition(2)
-	AddToggleOptionST("OID_ForceGayAnims", "$ostim_intended_sex_only", Main.IntendedSexOnly)
+	AddToggleOptionST("OID_IntendedSexOnly", "$ostim_intended_sex_only", Main.IntendedSexOnly)
 
 	SetCursorPosition(6)
 	AddColoredHeader("$ostim_header_player_roles")
@@ -1669,19 +1628,23 @@ Function DrawGenderRolesPage()
 	EndIf
 	AddToggleOptionST("OID_UseSoSSex", "$ostim_use_sos_sex", Main.UseSoSSex, UseSoSSexFlags)
 	SetCursorPosition(21)
+	int FutaUseMaleRoleFlags = OPTION_FLAG_NONE
+	If !Main.IntendedSexOnly || !Main.SoSInstalled || !Main.UseSoSSex
+		FutaUseMaleRoleFlags = OPTION_FLAG_DISABLED
+	EndIf
+	AddToggleOptionST("OID_FutaUseMaleRole", "$ostim_futa_use_male_role", Main.FutaUseMaleRole, FutaUseMaleRoleFlags)
+	SetCursorPosition(23)
 	int FutaFlags = OPTION_FLAG_NONE
 	If !Main.SoSInstalled || !Main.UseSoSSex
 		FutaFlags = OPTION_FLAG_DISABLED
 	EndIf
 	AddToggleOptionST("OID_FutaUseMaleExcitement", "$ostim_futa_use_male_excitement", Main.FutaUseMaleExcitement, FutaFlags)
-	SetCursorPosition(23)
-	AddToggleOptionST("OID_FutaUseMaleClimax", "$ostim_futa_use_male_orgasm", Main.FutaUseMaleClimax, FutaFlags)
 	SetCursorPosition(25)
-	AddToggleOptionST("OID_FutaUseMaleLight", "$ostim_futa_use_male_light", Main.FutaUseMaleLight, FutaFlags)
+	AddToggleOptionST("OID_FutaUseMaleClimax", "$ostim_futa_use_male_orgasm", Main.FutaUseMaleClimax, FutaFlags)
 EndFunction
 
 
-State OID_ForceGayAnims
+State OID_IntendedSexOnly
 	Event OnHighlightST()
 		SetInfoText("$ostim_tooltip_intended_sex_only")
 	EndEvent
@@ -1689,6 +1652,12 @@ State OID_ForceGayAnims
 	Event OnSelectST()
 		Main.IntendedSexOnly = !Main.IntendedSexOnly
 		SetToggleOptionValueST(Main.IntendedSexOnly)
+
+		int FutaUseMaleRoleFlags = OPTION_FLAG_NONE
+		If !Main.IntendedSexOnly || !Main.SoSInstalled || !Main.UseSoSSex
+			FutaUseMaleRoleFlags = OPTION_FLAG_DISABLED
+		EndIf
+		SetOptionFlagsST(FutaUseMaleRoleFlags, false, "OID_FutaUseMaleRole")
 	EndEvent
 EndState
 
@@ -1891,13 +1860,29 @@ State OID_UseSoSSex
 		Main.UseSoSSex = !Main.UseSoSSex
 		SetToggleOptionValueST(Main.UseSoSSex)
 
+		int FutaUseMaleRoleFlags = OPTION_FLAG_NONE
+		If !Main.IntendedSexOnly || !Main.UseSoSSex
+			FutaUseMaleRoleFlags = OPTION_FLAG_DISABLED
+		EndIf
+		SetOptionFlagsST(FutaUseMaleRoleFlags, false, "OID_FutaUseMaleRole")
+
 		int FutaFlags = OPTION_FLAG_NONE
 		If !Main.UseSoSSex
 			FutaFlags = OPTION_FLAG_DISABLED
 		EndIf
 		SetOptionFlagsST(FutaFlags, false, "OID_FutaUseMaleExcitement")
 		SetOptionFlagsST(FutaFlags, false, "OID_FutaUseMaleClimax")
-		SetOptionFlagsST(FutaFlags, false, "OID_FutaUseMaleLight")
+	EndEvent
+EndState
+
+State OID_FutaUseMaleRole
+	Event OnHighlightST()
+		SetInfoText("$ostim_tooltip_futa_use_male_role")
+	EndEvent
+
+	Event OnSelectST()
+		Main.FutaUseMaleRole = !Main.FutaUseMaleRole
+		SetToggleOptionValueST(Main.FutaUseMaleRole)
 	EndEvent
 EndState
 
@@ -1920,17 +1905,6 @@ State OID_FutaUseMaleClimax
 	Event OnSelectST()
 		Main.FutaUseMaleClimax = !Main.FutaUseMaleClimax
 		SetToggleOptionValueST(Main.FutaUseMaleClimax)
-	EndEvent
-EndState
-
-State OID_FutaUseMaleLight
-	Event OnHighlightST()
-		SetInfoText("$ostim_tooltip_futa_use_male_light")
-	EndEvent
-
-	Event OnSelectST()
-		Main.FutaUseMaleLight = !Main.FutaUseMaleLight
-		SetToggleOptionValueST(Main.FutaUseMaleLight)
 	EndEvent
 EndState
 
@@ -2381,6 +2355,19 @@ Function DrawSoundPage()
 	AddSliderOptionST("OID_MoanIntervalMax", "$ostim_moan_interval_max", Main.MoanIntervalMax / 1000.0, "{2} s")
 	SetCursorPosition(6)
 	AddSliderOptionST("OID_MoanVolume", "$ostim_moan_volume", Main.MoanVolume, "{2}")
+	SetCursorPosition(8)
+	AddMenuOptionST("OID_PlayerVoice", "$ostim_player_voice", OData.GetVoiceSetName(0x7))
+
+	SetCursorPosition(12)
+	AddColoredHeader("$ostim_header_dialogue")
+	SetCursorPosition(14)
+	AddSliderOptionST("OID_MaleDialogueCountdownMin", "$ostim_male_dialogue_countdown_min", Main.MaleDialogueCountdownMin, "{0}")
+	SetCursorPosition(16)
+	AddSliderOptionST("OID_MaleDialogueCountdownMax", "$ostim_male_dialogue_countdown_max", Main.MaleDialogueCountdownMax, "{0}")
+	SetCursorPosition(18)
+	AddSliderOptionST("OID_FemaleDialogueCountdownMin", "$ostim_female_dialogue_countdown_min", Main.FemaleDialogueCountdownMin, "{0}")
+	SetCursorPosition(20)
+	AddSliderOptionST("OID_FemaleDialogueCountdownMax", "$ostim_female_dialogue_countdown_max", Main.FemaleDialogueCountdownMax, "{0}")
 
 	SetCursorPosition(1)
 	AddColoredHeader("$ostim_header_sounds")
@@ -2414,7 +2401,7 @@ State OID_MoanIntervalMax
 
 	Event OnSliderOpenST()
 		SetSliderDialogStartValue(Main.MoanIntervalMax / 1000.0)
-		SetSliderDialogDefaultValue(5)
+		SetSliderDialogDefaultValue(4.0)
 		SetSliderDialogRange(0.1, 10)
 		SetSliderDialogInterval(0.05)
 	EndEvent
@@ -2443,6 +2430,102 @@ State OID_MoanVolume
 		SetSliderOptionValueST(Value, "{2}")
 	EndEvent
 EndState
+
+State OID_PlayerVoice
+	Event OnHighlightST()
+		SetInfoText("$ostim_tooltip_player_voice")
+	EndEvent
+
+	Event OnMenuOpenST()
+		OpenVoiceSetMenu(0x7)
+	EndEvent
+
+	Event OnMenuAcceptST(int Index)
+		SetVoiceSet(0x7, Index)
+	EndEvent
+
+	Event OnDefaultST()
+		SetVoiceSetToDefault(0x7)
+	EndEvent
+EndState
+
+
+State OID_MaleDialogueCountdownMin
+	Event OnHighlightST()
+		SetInfoText("$ostim_tooltip_male_dialogue_countdown_min")
+	EndEvent
+
+	Event OnSliderOpenST()
+		SetSliderDialogStartValue(Main.MaleDialogueCountdownMin)
+		SetSliderDialogDefaultValue(3)
+		SetSliderDialogRange(1, 10)
+		SetSliderDialogInterval(1)
+	EndEvent
+
+	Event OnSliderAcceptST(float Value)
+		Main.MaleDialogueCountdownMin = Value as int
+		SetSliderOptionValueST(Main.MaleDialogueCountdownMin, "{0}")
+		SetSliderOptionValueST(Main.MaleDialogueCountdownMax, "{0}", false, "OID_MaleDialogueCountdownMax")
+	EndEvent
+EndState
+
+State OID_MaleDialogueCountdownMax
+	Event OnHighlightST()
+		SetInfoText("$ostim_tooltip_male_dialogue_countdown_max")
+	EndEvent
+
+	Event OnSliderOpenST()
+		SetSliderDialogStartValue(Main.MaleDialogueCountdownMax)
+		SetSliderDialogDefaultValue(6)
+		SetSliderDialogRange(1, 10)
+		SetSliderDialogInterval(1)
+	EndEvent
+
+	Event OnSliderAcceptST(float Value)
+		Main.MaleDialogueCountdownMax = Value as int
+		SetSliderOptionValueST(Main.MaleDialogueCountdownMin, "{0}", false, "OID_MaleDialogueCountdownMin")
+		SetSliderOptionValueST(Main.MaleDialogueCountdownMax, "{0}")
+	EndEvent
+EndState
+
+State OID_FemaleDialogueCountdownMin
+	Event OnHighlightST()
+		SetInfoText("$ostim_tooltip_female_dialogue_countdown_min")
+	EndEvent
+
+	Event OnSliderOpenST()
+		SetSliderDialogStartValue(Main.FemaleDialogueCountdownMin)
+		SetSliderDialogDefaultValue(1)
+		SetSliderDialogRange(1, 10)
+		SetSliderDialogInterval(1)
+	EndEvent
+
+	Event OnSliderAcceptST(float Value)
+		Main.FemaleDialogueCountdownMin = Value as int
+		SetSliderOptionValueST(Main.FemaleDialogueCountdownMin, "{0}")
+		SetSliderOptionValueST(Main.FemaleDialogueCountdownMax, "{0}", false, "OID_FemaleDialogueCountdownMax")
+	EndEvent
+EndState
+
+State OID_FemaleDialogueCountdownMax
+	Event OnHighlightST()
+		SetInfoText("$ostim_tooltip_female_dialogue_countdown_max")
+	EndEvent
+
+	Event OnSliderOpenST()
+		SetSliderDialogStartValue(Main.FemaleDialogueCountdownMax)
+		SetSliderDialogDefaultValue(3)
+		SetSliderDialogRange(1, 10)
+		SetSliderDialogInterval(1)
+	EndEvent
+
+	Event OnSliderAcceptST(float Value)
+		Main.FemaleDialogueCountdownMax = Value as int
+		SetSliderOptionValueST(Main.FemaleDialogueCountdownMin, "{0}", false, "OID_FemaleDialogueCountdownMin")
+		SetSliderOptionValueST(Main.FemaleDialogueCountdownMax, "{0}")
+	EndEvent
+EndState
+
 
 State OID_SoundVolume
 	Event OnHighlightST()
@@ -2581,4 +2664,24 @@ Function SetEquipObjectIDToDefault(int FormID, string Type)
 	EndIf
 	OData.SetEquipObjectID(FormID, Type, ID)
 	SetMenuOptionValueST(ID)
+EndFunction
+
+
+string[] VoiceSetPairs
+
+Function OpenVoiceSetMenu(int FormID)
+	VoiceSetPairs = OData.GetVoiceSetPairs()
+	SetMenuDialogOptions(OData.PairsToNames(VoiceSetPairs))
+	SetMenuDialogStartIndex(0)
+	SetMenuDialogDefaultIndex(0)
+EndFunction
+
+Function SetVoiceSet(int FormID, int Index)
+	OData.SetVoiceSet(FormID, VoiceSetPairs[Index * 2])
+	SetMenuOptionValueST(VoiceSetPairs[Index * 2 + 1])
+EndFunction
+
+Function SetVoiceSetToDefault(int FormID)
+	OData.SetVoiceSet(FormID, 0)
+	SetMenuOptionValueST("default")
 EndFunction

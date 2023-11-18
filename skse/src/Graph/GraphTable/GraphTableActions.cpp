@@ -6,7 +6,7 @@
 namespace Graph {
     const char* ACTION_FILE_PATH{"Data/SKSE/Plugins/OStim/actions"};
 
-    ActionActor parseActionActor(json& json) {
+    ActionActor parseActionActor(std::string path, json& json) {
         ActionActor actor;
         if (json.contains("stimulation")) {
             actor.stimulation = json["stimulation"];
@@ -46,6 +46,24 @@ namespace Graph {
         if (json.contains("strippingSlots")) {
             for (auto& slot : json["strippingSlots"]) {
                 actor.strippingMask |= 1 << (slot.get<int>() - 30);
+            }
+        }
+
+        if (json.contains("faction")) {
+            if (json["faction"].is_array()) {
+                for (auto& jsonFaction : json["faction"]) {
+                    GameAPI::GameFaction faction;
+                    faction.loadJson(path, jsonFaction);
+                    if (faction) {
+                        actor.factions.push_back(faction);
+                    }
+                }
+            } else {
+                GameAPI::GameFaction faction;
+                faction.loadJson(path, json["faction"]);
+                if (faction) {
+                    actor.factions.push_back(faction);
+                }
             }
         }
 
@@ -120,15 +138,31 @@ namespace Graph {
     void GraphTable::SetupActions() {
         Util::JsonFileLoader::LoadFilesInFolder(
             ACTION_FILE_PATH, [&](std::string path, std::string filename, json json) {
+                if (json.contains("aliases")) {
+                    if (json["aliases"].is_array()) {
+                        int index = 0;
+                        for (auto& alias : json["aliases"]) {
+                            if (alias.is_string()) {
+                                actionAliases[alias] = filename;
+                            } else {
+                                logger::warn("alias {} of action '{}' is not a string", index, filename);
+                            }
+                            index++;
+                        }
+                    } else {
+                        logger::warn("property 'aliases' of action '{}' is not a list", filename);
+                    }
+                }
+
                 Graph::ActionAttributes attr;
                 if (json.contains("actor")) {
-                    attr.actor = parseActionActor(json["actor"]);
+                    attr.actor = parseActionActor(path, json["actor"]);
                 }
                 if (json.contains("target")) {
-                    attr.target = parseActionActor(json["target"]);
+                    attr.target = parseActionActor(path, json["target"]);
                 }
                 if (json.contains("performer")) {
-                    attr.performer = parseActionActor(json["performer"]);
+                    attr.performer = parseActionActor(path, json["performer"]);
                 }
 
                 if (json.contains("sounds")) {
@@ -153,9 +187,17 @@ namespace Graph {
             });
     }
 
+    std::string GraphTable::getActionAlias(std::string type) {
+        if (auto it = actionAliases.find(type); it != actionAliases.end()) {
+            return it->second;
+        }
+
+        return type;
+    }
+
     ActionAttributes* GraphTable::GetActionAttributesByType(std::string type) {
         if (auto it = actions.find(type); it != actions.end()) {
-            return &actions.at(type);
+            return &it->second;
         } else {
             logger::warn("No action found for {} using default", type);
             return &actions.at("default");

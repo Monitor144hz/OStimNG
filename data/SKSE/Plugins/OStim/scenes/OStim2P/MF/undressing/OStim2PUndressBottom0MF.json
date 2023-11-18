@@ -1,0 +1,32 @@
+{
+	"name": "Undress Bottom Straight",
+	"modpack": "OStim",
+	"length": 7.0,
+	"tags":[
+		"undressing"
+	],
+	"speeds":[
+		{
+			"animation": "OStim2PUndressBottom0MF"
+		}
+	],
+	"destination": "OStim2PUndressingHub0MF",
+	"actors":[
+		{
+			"intendedSex": "male",
+			"sosBend": 7,
+			"scale": 1.03,
+			"tags": [
+				"standing"
+			],
+			"feetOnGround": true
+		},
+		{
+			"intendedSex": "female",
+			"tags": [
+				"squatting"
+			],
+			"feetOnGround": true
+		}
+	]
+}

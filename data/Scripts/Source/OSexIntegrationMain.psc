@@ -121,26 +121,6 @@ bool Property AddActorsAtStart
 EndProperty
 
 
-GlobalVariable Property OStimMaleLightMode Auto
-int Property DomLightPos
-	int Function Get()
-		Return OStimMaleLightMode.value As int
-	EndFunction
-	Function Set(int Value)
-		OStimMaleLightMode.value = Value
-	EndFunction
-EndProperty
-
-GlobalVariable Property OStimFemaleLightMode Auto
-int Property SubLightPos
-	int Function Get()
-		Return OStimFemaleLightMode.value As int
-	EndFunction
-	Function Set(int Value)
-		OStimFemaleLightMode.value = Value
-	EndFunction
-EndProperty
-
 GlobalVariable Property OStimOnlyLightInDark Auto
 bool Property LowLightLevelLightsOnly
 	bool Function Get()
@@ -155,25 +135,35 @@ bool Property LowLightLevelLightsOnly
 	EndFunction
 EndProperty
 
-GlobalVariable Property OStimMaleLightBrightness Auto
-int Property DomLightBrightness
-	int Function Get()
-		Return OStimMaleLightBrightness.value As int
+
+GlobalVariable Property OStimAutoExportSettings Auto
+bool Property AutoExportSettings
+	bool Function Get()
+		Return OStimAutoExportSettings.value != 0
 	EndFunction
-	Function Set(int Value)
-		OStimMaleLightBrightness.value = Value
+	Function Set(bool Value)
+		If Value
+			OStimAutoExportSettings.value = 1
+		Else
+			OStimAutoExportSettings.value = 0
+		EndIf
 	EndFunction
 EndProperty
 
-GlobalVariable Property OStimFemaleLightBrightness Auto
-int Property SubLightBrightness
-	int Function Get()
-		Return OStimFemaleLightBrightness.value As int
+GlobalVariable Property OStimAutoImportSettings Auto
+bool Property AutoImportSettings
+	bool Function Get()
+		Return OStimAutoImportSettings.value != 0
 	EndFunction
-	Function Set(int Value)
-		OStimFemaleLightBrightness.value = Value
+	Function Set(bool Value)
+		If Value
+			OStimAutoImportSettings.value = 1
+		Else
+			OStimAutoImportSettings.value = 0
+		EndIf
 	EndFunction
 EndProperty
+
 
 
 ; -------------------------------------------------------------------------------------------------
@@ -1228,6 +1218,20 @@ bool Property UseSoSSex
 	EndFunction
 EndProperty
 
+GlobalVariable Property OStimFutaUseMaleRole Auto
+bool Property FutaUseMaleRole
+	bool Function Get()
+		Return OStimFutaUseMaleRole.value != 0
+	EndFunction
+	Function Set(bool Value)
+		If Value
+			OStimFutaUseMaleRole.value = 1
+		Else
+			OStimFutaUseMaleRole.value = 0
+		EndIf
+	EndFunction
+EndProperty
+
 GlobalVariable Property OStimFutaUseMaleExcitement Auto
 bool Property FutaUseMaleExcitement
 	bool Function Get()
@@ -1252,20 +1256,6 @@ bool Property FutaUseMaleClimax
 			OStimFutaUseMaleClimax.value = 1
 		Else
 			OStimFutaUseMaleClimax.value = 0
-		EndIf
-	EndFunction
-EndProperty
-
-GlobalVariable Property OStimFutaUseMaleLight Auto
-bool Property FutaUseMaleLight
-	bool Function Get()
-		Return OStimFutaUseMaleLight.value != 0
-	EndFunction
-	Function Set(bool Value)
-		If Value
-			OStimFutaUseMaleLight.value = 1
-		Else
-			OStimFutaUseMaleLight.value = 0
 		EndIf
 	EndFunction
 EndProperty
@@ -1474,7 +1464,7 @@ int Property MoanIntervalMin
 		Return OStimMoanIntervalMin.value As int
 	EndFunction
 	Function Set(int Value)
-		If ExpressionDurationMax < Value
+		If MoanIntervalMax < Value
 			OStimMoanIntervalMin.value = OStimMoanIntervalMax.value
 			OStimMoanIntervalMax.value = Value
 		Else
@@ -1489,7 +1479,7 @@ int Property MoanIntervalMax
 		Return OStimMoanIntervalMax.value As int
 	EndFunction
 	Function Set(int Value)
-		If ExpressionDurationMin > Value
+		If MoanIntervalMin > Value
 			OStimMoanIntervalMax.value = OStimMoanIntervalMin.value
 			OStimMoanIntervalMin.value = Value
 		Else
@@ -1507,6 +1497,67 @@ float Property MoanVolume
 		OStimMoanVolume.value = Value
 	EndFunction
 EndProperty
+
+GlobalVariable Property OStimMaleDialogueCountdownMin Auto
+int Property MaleDialogueCountdownMin
+	int Function Get()
+		Return OStimMaleDialogueCountdownMin.value As int
+	EndFunction
+	Function Set(int Value)
+		If MaleDialogueCountdownMax < Value
+			OStimMaleDialogueCountdownMin.value = OStimMaleDialogueCountdownMax.value
+			OStimMaleDialogueCountdownMax.value = Value
+		Else
+			OStimMaleDialogueCountdownMin.value = Value
+		EndIf
+	EndFunction
+EndProperty
+
+GlobalVariable Property OStimMaleDialogueCountdownMax Auto
+int Property MaleDialogueCountdownMax
+	int Function Get()
+		Return OStimMaleDialogueCountdownMax.value As int
+	EndFunction
+	Function Set(int Value)
+		If MaleDialogueCountdownMin > Value
+			OStimMaleDialogueCountdownMax.value = OStimMaleDialogueCountdownMin.value
+			OStimMaleDialogueCountdownMin.value = Value
+		Else
+			OStimMaleDialogueCountdownMax.value = Value
+		EndIf
+	EndFunction
+EndProperty
+
+GlobalVariable Property OStimFemaleDialogueCountdownMin Auto
+int Property FemaleDialogueCountdownMin
+	int Function Get()
+		Return OStimFemaleDialogueCountdownMin.value As int
+	EndFunction
+	Function Set(int Value)
+		If FemaleDialogueCountdownMax < Value
+			OStimFemaleDialogueCountdownMin.value = OStimFemaleDialogueCountdownMax.value
+			OStimFemaleDialogueCountdownMax.value = Value
+		Else
+			OStimFemaleDialogueCountdownMin.value = Value
+		EndIf
+	EndFunction
+EndProperty
+
+GlobalVariable Property OStimFemaleDialogueCountdownMax Auto
+int Property FemaleDialogueCountdownMax
+	int Function Get()
+		Return OStimFemaleDialogueCountdownMax.value As int
+	EndFunction
+	Function Set(int Value)
+		If FemaleDialogueCountdownMin > Value
+			OStimFemaleDialogueCountdownMax.value = OStimFemaleDialogueCountdownMin.value
+			OStimFemaleDialogueCountdownMin.value = Value
+		Else
+			OStimFemaleDialogueCountdownMax.value = Value
+		EndIf
+	EndFunction
+EndProperty
+
 
 GlobalVariable Property OStimSoundVolume Auto
 float Property SoundVolume
@@ -1572,11 +1623,12 @@ EndFunction
 * * 27 = OStim NG 6.0 to 6.7
 * * 28 = OStim NG 6.8
 * * 29 = OStim Standalone Public Beta
+* * 30 = OStim Standalone 7.1
 * *
 * * @return: the version of the current API
 */;
 Int Function GetAPIVersion()
-	Return 29
+	Return 30
 EndFunction
 
 Bool Function ActorHasFacelight(Actor Act)
@@ -1824,6 +1876,7 @@ EndFunction
 
 
 Event OStimStart(String EventName, String sceneId, Float index, Form Sender)
+	_Actors = OThread.GetActors(0)
 	MostRecentOrgasmedActor = None
 	StartTime = Utility.GetCurrentRealTime()
 EndEvent
@@ -1832,7 +1885,7 @@ Event OStimEnd(String EventName, String sceneId, Float index, Form Sender)
 	OSANative.EndPlayerDialogue()
 EndEvent
 
-Event OstimOrgasm(String EventName, String sceneId, Float index, Form Sender)
+Event OStimOrgasm(String EventName, String sceneId, Float index, Form Sender)
 	Actor Act = Sender As Actor
 	MostRecentOrgasmedActor = Act
 
@@ -1982,6 +2035,10 @@ Function Startup()
 EndFunction
 
 Function OnLoadGame()
+	If SKSE.GetPluginVersion("OStim") != 0x01000003
+		Debug.MessageBox("OStim Standalone: Your OStim.dll or OSexIntegraionMain.pex is being overwritten with an old version. OStim and its addons will NOT work properly. Please don't report any other bugs while this issue persists.")
+	EndIf
+
 	If (Game.GetModByName("Schlongs of Skyrim.esp") != 255)
 		SoSFaction = (Game.GetFormFromFile(0x0000AFF8, "Schlongs of Skyrim.esp")) as Faction
 	Else
@@ -1995,6 +2052,7 @@ Function OnLoadGame()
 		OStimImprovedCamSupport.value = 0
 	EndIf
 		
+	DisableOSAControls = false
 	OBars.OnGameLoad()
 
 	BBLS_FaceLightFaction = Game.GetFormFromFile(0x00755331, "BBLS_SKSE64_Patch.esp") as Faction
@@ -2019,9 +2077,15 @@ Function OnLoadGame()
 	POSITION_TAGS[14] = "standing"
 	POSITION_TAGS[15] = "suspended"
 
-	RegisterForModEvent("ostim_start", "OstimStart")
-	RegisterForModEvent("ostim_end", "OstimEnd")
-	RegisterForModEvent("ostim_orgasm", "OstimOrgasm")
+	RegisterForModEvent("ostim_start", "OStimStart")
+	RegisterForModEvent("ostim_end", "OStimEnd")
+	RegisterForModEvent("ostim_orgasm", "OStimOrgasm")
+
+	If AutoImportSettings
+		Console("Loading Ostim settings.")
+		OData.ImportSettings()
+		Console("Loaded Ostim settings.")
+	EndIf
 EndFunction
 
 
@@ -2287,6 +2351,11 @@ Bool property EndedProper
 	EndFunction
 EndProperty
 
+int Property DomLightPos = 0 Auto
+int Property SubLightPos = 0 Auto
+int Property DomLightBrightness = 0 Auto
+int Property SubLightBrightness = 0 Auto
+
 Bool Property MuteOSA
 	bool Function Get()
 		Return false
@@ -2311,13 +2380,7 @@ Bool Property MuteOSA
 	EndFunction
 EndProperty
 
-bool Property DisableOSAControls
-	bool Function Get()
-		return false
-	EndFunction
-	Function Set(bool Value)
-	EndFunction
-EndProperty
+bool Property DisableOSAControls = false Auto
 
 Actor Function GetDomActor()
 	Return GetActor(0)
@@ -2620,8 +2683,9 @@ Function Orgasm(Actor Act)
 	OActor.Climax(Act, false)
 EndFunction
 
+Actor[] _Actors
 Actor[] Function GetActors()
-	Return OThread.GetActors(0)
+	Return _Actors
 EndFunction
 
 Actor Function GetActor(int Index)
@@ -2737,6 +2801,11 @@ Bool Function StartScene(Actor Dom, Actor Sub, Bool zUndressDom = False, Bool zU
 		Actor[] DominantActors = new Actor[1]
 		DominantActors[0] = aggressingActor
 		OThreadBuilder.SetDominantActors(BuilderID, DominantActors)
+	EndIf
+
+	If DisableOSAControls && (Dom == PlayerRef || Sub == PlayerRef || zThirdActor == PlayerRef)
+		OThreadBuilder.NoPlayerControl(BuilderID)
+		DisableOSAControls = false
 	EndIf
 
 	Return OThreadBuilder.Start(BuilderID) >= 0

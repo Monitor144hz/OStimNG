@@ -9,14 +9,10 @@ namespace MCM {
         for (auto& [formID, setting] : settings) {
             setting.setup(formID);
         }
-        auto dataHandler = RE::TESDataHandler::GetSingleton();
-
-        OStimUsePapyrusUndressing = dataHandler->LookupForm<RE::TESGlobal>(0xDB0, "OStim.esp");
     }
 
     void MCMTable::resetValues() {
         undressingMask = 0x3D8BC39D;
-        doPapyrusUndressing = false;
     }
 
     void MCMTable::restoreDefaults() {
@@ -38,12 +34,6 @@ namespace MCM {
         return 1 << static_cast<int>(settings[0xDAE].asInt() - 30);
     }
 
-    void MCMTable::setPapyusUndressing(bool doPapyrus) {
-        doPapyrusUndressing = doPapyrus;
-        OStimUsePapyrusUndressing->value = doPapyrus ? 1 : 0;
-        logger::info("papyrus undressing is {}", doPapyrus ? "enabled" : "disabled");
-    }
-
 
     bool MCMTable::useSoSSex() {
         return Compatibility::CompatibilityTable::sosInstalled() && settings[0xE04].asBool();
@@ -59,6 +49,10 @@ namespace MCM {
     
     bool MCMTable::futaUseMaleLight() {
         return Compatibility::CompatibilityTable::sosInstalled() && settings[0xE04].asBool() && settings[0xE25].asBool();
+    }
+
+    bool MCMTable::futaUseMaleRole() {
+        return Compatibility::CompatibilityTable::sosInstalled() && settings[0xE04].asBool() && settings[0xE48].asBool();
     }
 
 

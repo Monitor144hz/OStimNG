@@ -2,6 +2,8 @@
 * * collection of methods to modify threads
 * * the thread containing the player will always have the ThreadID 0
 * * NPC on NPC threads will always have positive ThreadIDs
+* *
+* * required API Version: 29
 */;
 ScriptName OThread
 
@@ -49,6 +51,13 @@ bool Function IsRunning(int ThreadID) Global Native
 * * @param: ThreadID, the id of the thread
 */;
 Function Stop(int ThreadID) Global Native
+
+;/* GetThreadCount
+* * return the number of currently running threads, including the player thread if it is running
+* *
+* * @return: the number of currently running threads
+*/;
+int Function GetThreadCount() Global Native
 
 
 ; ███╗   ██╗ █████╗ ██╗   ██╗██╗ ██████╗  █████╗ ████████╗██╗ ██████╗ ███╗   ██╗

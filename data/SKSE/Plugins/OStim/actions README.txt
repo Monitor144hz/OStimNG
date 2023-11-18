@@ -11,6 +11,8 @@ field summary:
 note: all string values are converted to lower case when parsed, so capitalization does not matter
 
 action fields:
+"info" (string): this field does not get parsed, it's just there to help understanding how to properly use this action
+"aliases" (list<string>): a list of aliases for this action, using an alias in a scene file will result in it being treated as if this action was used
 "actor" (object): a collection of attributes for the action actor (see actor fields)
 "target" (object): a collection of attributes for the action target (see actor fields)
 "performer" (object): a collection of attributes for the action performer (see actor fields)
@@ -19,6 +21,7 @@ action fields:
 	these can be used by addons to filter actions
 
 actor fields:
+"info" (string): this field does not get parsed, it's just there to help understanding how to properly use this action
 "stimulation" (float): the amount of stimulation this action generates every second for this Skyrim actor
 	in an animation with multiple stimulating actions the Skyrim actor will get stimulation equal to the highest stimulation defined for them plus 10% of all other stimulation defined for them
 "maxStimulation" (float): a stimulation threshold after which this action will no longer generate any stimulation
@@ -34,6 +37,8 @@ actor fields:
 "requirements" (list<string>): a list of requirements for this Skyrim actor, if they are not met an animation containing this action will not show up in navigation
 	possible values are "anus", "breast", "foot", "hand", "mouth", "nipple", "penis", "testicles" and "vagina"
 "strippingSlots" (list<int>): a list of biped slots to strip on this Skyrim actor when executing this scene (if partial undressing is enabled in the MCM)
+"faction" (object): a faction the actor is put in while participating in this role in this action (see form fields)
+	this is mainly useful for condition functions for addons / voice sets
 "ints" (map<string, int>): A map of custom ints that can be used by addons
 "intLists" (map<string, list<int>>): a map of custom int lists that can be used by addons
 "floats" (map<string, float>): a map of custom floats that can be used by addons

@@ -5,6 +5,8 @@
 #include "Core/ThreadManager.h"
 #include "Game/Locker.h"
 #include "MCM/MCMTable.h"
+#include "Util/Globals.h"
+#include "Util/MathUtil.h"
 
 namespace Serialization {
     void closeOldThreads() {
@@ -35,6 +37,26 @@ namespace Serialization {
         }
     }
 
+
+    RE::FormID getVoiceSet(RE::FormID formID) {
+        auto iter = actorData.find(formID);
+        if (iter != actorData.end()) {
+            return iter->second.voiceSet;
+        }
+
+        return 0;
+    }
+
+    void setVoiceSet(RE::FormID formID, RE::FormID voiceSet) {
+        auto iter = actorData.find(formID);
+        if (iter != actorData.end()) {
+            iter->second.voiceSet = voiceSet;
+        } else {
+            actorData[formID] = {.voiceSet = voiceSet};
+        }
+    }
+
+
     void Save(SKSE::SerializationInterface* serial) {
         std::unique_lock lock(_lock);
         logger::info("serializing data");
@@ -59,7 +81,7 @@ namespace Serialization {
             oldThread.serialize(serial);
         }
 
-        if (!serial->OpenRecord(actorDataRecord, 0)) {
+        if (!serial->OpenRecord(actorDataRecord, ACTOR_DATA_VERSION)) {
             logger::error("Unable to open record to write cosave data.");
             return;
         }
@@ -103,7 +125,7 @@ namespace Serialization {
                     RE::FormID newID;
                     bool valid = serial->ResolveFormID(oldID, newID);
 
-                    ActorData data = ActorData::deserialize(serial);
+                    ActorData data = ActorData::deserialize(serial, version);
 
                     if (valid) {
                         actorData.emplace(newID, data);
@@ -122,6 +144,7 @@ namespace Serialization {
         auto locker = Locker::GetSingleton();
         locker->Revert(serial);
         OStim::ThreadManager::GetSingleton()->UntrackAllThreads();
+        Util::Globals::resetSaveGameValues();
         MCM::MCMTable::resetValues();
     }
 
@@ -129,7 +152,7 @@ namespace Serialization {
         json["actorData"] = json::object();
 
         for (auto& [formID, data] : actorData) {
-            std::string stringID = std::to_string(formID & 0x00FFFFFF);
+            std::string stringID = std::to_string(MathUtil::uintToInt(formID));
             json["actorData"][stringID] = json::object();
 
             RE::TESForm* form = RE::TESForm::LookupByID(formID);
@@ -143,6 +166,15 @@ namespace Serialization {
                     json["actorData"][stringID]["equipObjects"][type] = id;
                 }
             }
+
+            if (data.voiceSet != 0) {
+                RE::TESForm* voice = RE::TESForm::LookupByID(formID);
+                if (voice) {
+                    json["actorData"][stringID]["voice"] = json::object();
+                    json["actorData"][stringID]["voice"]["mod"] = voice->GetFile(0)->GetFilename();
+                    json["actorData"][stringID]["voice"]["formid"] = std::to_string(data.voiceSet & 0x00FFFFFF);
+                }
+            }
         }
     }
 
@@ -152,7 +184,7 @@ namespace Serialization {
         RE::TESDataHandler* dataHandler = RE::TESDataHandler::GetSingleton();
         if (json.contains("actorData")) {
             for (auto& [key, value] : json["actorData"].items()) {
-                RE::FormID formID = std::stoi(key);
+                RE::FormID formID = MathUtil::intToUint(std::stoi(key));
 
                 if (value.contains("file")) {
                     std::string file = value["file"];
@@ -171,6 +203,18 @@ namespace Serialization {
                     for (auto& [type, id] : value["equipObjects"].items()) {
                         data.equipObjects[type] = id;
                     }
+                }
+
+                if (value.contains("voice")) {
+                    RE::FormID voiceID = std::stoi(static_cast<std::string>(value["voice"]["formid"]));
+                    if (const RE::TESFile* mod = dataHandler->LookupLoadedModByName(value["voice"]["mod"])) {
+                        voiceID &= 0x00FFFFFF;
+                        voiceID += mod->GetCompileIndex() << 24;
+                    } else if (const RE::TESFile* mod = dataHandler->LookupLoadedLightModByName(value["voice"]["mod"])) {
+                        voiceID &= 0x00000FFF;
+                        voiceID += mod->GetPartialIndex() << 12;
+                    }
+                    data.voiceSet = voiceID;
                 }
 
                 actorData[formID] = data;

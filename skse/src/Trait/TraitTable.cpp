@@ -1,6 +1,8 @@
 #include "TraitTable.h"
 
 #include "FacialExpression.h"
+
+#include "Graph/GraphTable.h"
 #include "Serial/Manager.h"
 #include "Util/ActorUtil.h"
 #include "Util/MapUtil.h"
@@ -48,13 +50,13 @@ namespace Trait {
 
             if (json.contains("actionActors")) {
                 for (auto& action : json["actionActors"]) {
-                    addToTable(&expressionsByActionActors, action, expression);
+                    addToTable(&expressionsByActionActors, Graph::GraphTable::getActionAlias(action), expression);
                 }
             }
 
             if (json.contains("actionTargets")) {
                 for (auto& action : json["actionTargets"]) {
-                    addToTable(&expressionsByActionTargets, action, expression);
+                    addToTable(&expressionsByActionTargets, Graph::GraphTable::getActionAlias(action), expression);
                 }
             }
         });
@@ -70,7 +72,6 @@ namespace Trait {
 
     void TraitTable::setupForms() {
         RE::TESDataHandler* handler = RE::TESDataHandler::GetSingleton();
-        excitementFaction.loadFile("OStim.esp", 0xD93);
         noFacialExpressionsFaction = handler->LookupForm<RE::TESFaction>(0xD92, "OStim.esp");
 
         // this needs to go in setupForms because it requires the kDataLoaded event
@@ -137,6 +138,12 @@ namespace Trait {
                 }
             } else {
                 equipObjects.emplace(type, std::unordered_map<std::string, EquipObject*>{{id, object}});
+            }
+
+            bool isDefault = false;
+            JsonUtil::loadBool(json, isDefault, "default", filename, "equip object", false);
+            if (isDefault) {
+                defaultEquipObjects[type] = object;
             }
         });
     }
@@ -300,11 +307,18 @@ namespace Trait {
         }
 
         id = Serialization::getEquipObject(actor.isSex(GameAPI::GameSex::FEMALE) ? 0x1 : 0x0, type);
-        if (id != "" && id != "random") {
+        if (id == "random") {
+            return MapUtil::randomValue(iter->second);
+        } else if (id != "" && id != "default") {
             auto iter2 = iter->second.find(id);
             if (iter2 != iter->second.end()) {
                 return iter2->second;
             }
+        }
+
+        auto iter2 = defaultEquipObjects.find(type);
+        if (iter2 != defaultEquipObjects.end()) {
+            return iter2->second;
         }
 
         return MapUtil::randomValue(iter->second);
@@ -312,7 +326,7 @@ namespace Trait {
 
     std::vector<std::string> TraitTable::getEquipObjectPairs(RE::FormID formID, std::string type) {
         std::vector<std::string> ret;
-        if (formID > 1) {
+        if (defaultEquipObjects.contains(type) || formID > 1) {
             ret.push_back("default");
             ret.push_back("default");
         }
@@ -343,7 +357,7 @@ namespace Trait {
     std::string TraitTable::getEquipObjectName(RE::FormID formID, std::string type) {
         std::string id = Serialization::getEquipObject(formID, type);
         if (id == "") {
-            return formID >= 1 ? "default" : "random";
+            return defaultEquipObjects.contains(type) || formID > 1 ? "default" : "random";
         } else if (id == "default") {
             return "default";
         } else if (id == "random") {

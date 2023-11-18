@@ -1,5 +1,11 @@
 {
+	"aliases":[
+		"rubdickagainstface",
+		"rubpenisagainstface",
+		"rubbingdickagainstface"
+	],
 	"actor":{
+		"info": "the one with the penis",
 		"stimulation":0.75,
 		"fullStrip":true,
 		"moan":true,
@@ -13,11 +19,18 @@
 			52,
 			53,
 			54
-		]
+		],
+		"faction":{
+			"info": "OStimRubbingPenisAgainstFaceActorFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE84"
+		}
 	},
 	"target":{
+		"info": "the one with the head",
 		"stimulation":0.1,
 		"maxStimulation":50,
+		"moan": true,
 		"talk":true,
 		"strippingSlots":[
 			30,
@@ -25,6 +38,11 @@
 			44,
 			55
 		],
+		"faction":{
+			"info": "OStimRubbingPenisAgainstFaceTargetFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE85"
+		},
 		"stringLists":{
 			"cum":[
 				"face"

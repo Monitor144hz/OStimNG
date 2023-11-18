@@ -4,6 +4,8 @@
 
 #include "GameAPI/GameCamera.h"
 #include "Graph/GraphTable.h"
+#include "UI/UIState.h"
+#include "Util/Constants.h"
 #include "Util/VectorUtil.h"
 
 namespace OStim {
@@ -114,6 +116,10 @@ namespace OStim {
     }
 
     void Thread::navigateTo(Graph::Node* node) {
+        if (!m_currentNode) {
+            return;
+        }
+
         clearNodeQueue();
 
         if (m_currentNode == node) {
@@ -218,8 +224,10 @@ namespace OStim {
                     if (inSequence) {
                         if (endAfterSequence) {
                             stop();
+                        } else {
+                            inSequence = false;
+                            UI::UIState::GetSingleton()->NodeChanged(this, m_currentNode);
                         }
-                        inSequence = false;
                     }
                 } else {
                     Graph::SequenceEntry next = nodeQueue.front();

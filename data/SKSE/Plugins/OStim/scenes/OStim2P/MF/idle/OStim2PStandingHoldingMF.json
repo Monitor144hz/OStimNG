@@ -1,0 +1,67 @@
+{
+	"name": "Standing Holding Straight",
+	"modpack": "OStim",
+	"length": 2.0,
+	"speeds":[
+		{
+			"animation": "OStim2PStandingHoldingMF"
+		}
+	],
+	"navigations":[
+		{
+			"destination": "OStim2PStandingHoldingToApartMF",
+			"description": "separate",
+			"icon": "OStim/symbols/x",
+			"priority": 0
+		},
+		{
+			"destination": "OStim2PStandingHoldingToHoldingFromBehindMF",
+			"description": "turn around ({1})",
+			"icon": "OStim/sensual/embrace_behind_mf",
+			"priority": 0
+		},
+		{
+			"destination": "OStim2PStandingHoldingChinMF",
+			"description": "hold {1}s chin",
+			"icon": "OStim/detail/holdingneck_mf",
+			"priority": 1000
+		},
+		{
+			"destination": "OStim2PStandingHugMF",
+			"description": "hug {1}",
+			"icon": "OStim/sensual/embrace_mf",
+			"priority": 1000
+		},
+		{
+			"destination": "OStim2PStandingKissMF",
+			"description": "kiss {1}",
+			"icon": "OStim/sensual/kissing_mf",
+			"priority": 1000
+		}
+	],
+	"actors":[
+		{
+			"intendedSex": "male",
+			"sosBend": 7,
+			"scale": 1.03,
+			"tags": [
+				"standing"
+			],
+			"feetOnGround": true
+		},
+		{
+			"intendedSex": "female",
+			"tags": [
+				"standing"
+			],
+			"feetOnGround": true
+		}
+	],
+	"actions":[
+		{
+			"type": "holdingbody",
+			"actor": 0,
+			"target": 1
+		}
+	]
+}

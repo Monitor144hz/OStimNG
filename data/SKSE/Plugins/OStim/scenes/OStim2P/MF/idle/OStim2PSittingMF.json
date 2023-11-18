@@ -1,0 +1,63 @@
+{
+	"name": "Sitting Straight",
+	"modpack": "OStim",
+	"length": 2.0,
+	"speeds":[
+		{
+			"animation": "OStim2PSittingMF"
+		}
+	],
+	"navigations":[
+		{
+			"destination": "OStim2PKneelingLyingFF",
+			"description": "go to lesbian idle",
+			"icon": "OStim/symbols/gender_ff"
+		},
+		{
+			"destination": "OStim2PKneelingLyingFrontMM",
+			"description": "go to gay idle",
+			"icon": "OStim/symbols/gender_mm"
+		},
+		{
+			"destination": "OStim2PStandingApartMF",
+			"description": "stand up",
+			"icon": "OStim/positional/standup_m"
+		},
+		{
+			"destination": "OStim2PDoggyIdleMF",
+			"description": "get on all fours ({1})",
+			"icon": "OStim/positional/allfours_alt_f"
+		},
+		{
+			"destination": "OStim2PLyingOnTopMF",
+			"description": "lie on {1}",
+			"icon": "OStim/positional/lyingback_f"
+		},
+		{
+			"destination": "OStim2PBothLyingMF",
+			"description": "lie down",
+			"icon": "OStim/positional/lyingback_m"
+		}
+	],
+	"tags":[
+		"idle"
+	],
+	"actors":[
+		{
+			"intendedSex": "male",
+			"sosBend": 7,
+			"scale": 1.03,
+			"tags": [
+				"sitting"
+			],
+			"feetOnGround": false
+		},
+		{
+			"intendedSex": "female",
+			"tags": [
+				"sitting"
+			],
+			"feetOnGround": false
+		}
+	]
+}

@@ -1,0 +1,25 @@
+{
+	"aliases":[
+		"specate",
+		"watch",
+		"watching"
+	],
+	"actor":{
+		"info": "the one with the eyes",
+		"moan": true,
+		"talk": true,
+		"faction":{
+			"info": "OStimSpectatingActorFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE9D"
+		}
+	},
+	"target":{
+		"info": "the one doing stuff",
+		"faction":{
+			"info": "OStimSpectatingTargetFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE9E"
+		}
+	}
+}

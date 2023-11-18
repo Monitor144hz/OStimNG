@@ -1,0 +1,72 @@
+{
+	"name": "Standing Cuddle From Behind Straight",
+	"modpack": "OStim",
+	"length": 2.0,
+	"speeds":[
+		{
+			"animation": "OStim2PStandingCuddleFromBehindMF"
+		}
+	],
+	"navigations":[
+		{
+			"destination": "OStim2PStandingHoldingFromBehindMF",
+			"description": "return",
+			"icon": "OStim/symbols/return",
+			"priority": -1000
+		},
+		{
+			"destination": "OStim2PStandingHugFromBehindMF",
+			"description": "hug {1}",
+			"icon": "OStim/sensual/embrace_mf",
+			"priority": 1000
+		},
+		{
+			"destination": "OStim2PStandingGropingBreastsFromBehindMF",
+			"description": "grope {1}s breasts",
+			"icon": "OStim/detail/gropingbreast_mf",
+			"priority": 2000
+		},
+		{
+			"destination": "OStim2PStandingGrindingDryMF",
+			"description": "grind your butt against {0}s crotch",
+			"icon": "OStim/sensual/embrace_behind_mf",
+			"priority": 2000
+		},
+		{
+			"destination": "OStim2PStandingSpankIdleMF",
+			"description": "bend {1} over for some spankings",
+			"icon": "OStim/sexual/spank_right_mf",
+			"priority": 2000
+		}
+	],
+	"actors":[
+		{
+			"intendedSex": "male",
+			"sosBend": 7,
+			"scale": 1.03,
+      		"lookUp": -35,
+      		"lookLeft": -25,
+			"tags": [
+				"standing"
+			],
+			"feetOnGround": true
+		},
+		{
+			"intendedSex": "female",
+      		"lookUp": 35,
+      		"lookLeft": 50,
+			"tags": [
+				"facingaway",
+				"standing"
+			],
+			"feetOnGround": true
+		}
+	],
+	"actions":[
+		{
+			"type": "cuddling",
+			"actor": 0,
+			"target": 1
+		}
+	]
+}

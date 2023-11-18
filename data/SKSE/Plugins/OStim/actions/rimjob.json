@@ -1,7 +1,14 @@
 {
+	"aliases":[
+		"rimj",
+		"rj"
+	],
+	"info": "rimjob is with a tongue, if you want no tongue use anilingus",
 	"actor":{
+		"info": "the one with the mouth",
 		"stimulation":0.1,
 		"maxStimulation":50,
+		"moan":true,
 		"muffled":true,
 		"expressionOverride":"tongue",
 		"requirements":[
@@ -9,11 +16,25 @@
 		],
 		"strippingSlots":[
 			30,
+			31,
 			44,
 			55
+		],
+		"faction":[
+			{
+				"info": "OStimRimjobActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE80"
+			},
+			{
+				"info": "OStimAnyOralActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEA7"
+			}
 		]
 	},
 	"target":{
+		"info": "the one with the butt",
 		"stimulation":0.3,
 		"fullStrip":true,
 		"moan":true,
@@ -27,6 +48,18 @@
 			52,
 			53,
 			54
+		],
+		"faction":[
+			{
+				"info": "OStimRimjobTargetFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE81"
+			},
+			{
+				"info": "OStimAnyOralTargetFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEA8"
+			}
 		]
 	},
 	"performer":{
@@ -34,17 +67,6 @@
 			"stamina":0.75
 		}
 	},
-	"sounds":[
-		{
-			"type":"loop",
-			"sound":{
-				"mod":"OStim.esp",
-				"formid":"0xE15"
-			},
-			"muteWithActor": true,
-			"delay":1000
-		}	
-	],
 	"tags":[
 		"sexual"
 	]

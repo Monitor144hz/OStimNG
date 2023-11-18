@@ -10,12 +10,15 @@
 #include "Sound/SoundTable.h"
 #include "Trait/TraitTable.h"
 #include "Util/ActorUtil.h"
+#include "Util/APITable.h"
 #include "Util/CameraUtil.h"
 #include "Util/CompatibilityTable.h"
 #include "Util/FormUtil.h"
 #include "Util/Constants.h"
+#include "Util/Globals.h"
 #include "Util/LookupTable.h"
 #include "Util/ObjectRefUtil.h"
+#include "Util/RNGUtil.h"
 #include "Util/StringUtil.h"
 #include "Util/VectorUtil.h"
 
@@ -26,13 +29,25 @@ namespace OStim {
         female = actor.isSex(GameAPI::GameSex::FEMALE);
         schlong = Compatibility::CompatibilityTable::hasSchlong(actor);
         isPlayer = actor.isPlayer();
-        actor.addToFaction(Trait::TraitTable::getExcitementFaction());
         heelOffset = ActorUtil::getHeelOffset(actor.form);
 
         excitementMultiplier = female && (!schlong || !MCM::MCMTable::futaUseMaleExcitement()) ? MCM::MCMTable::getFemaleSexExcitementMult() : MCM::MCMTable::getMaleSexExcitementMult();
         loopExcitementDecay = MCM::MCMTable::getExcitementDecayRate() * Constants::LOOP_TIME_SECONDS;
 
         voiceSet = Sound::SoundTable::getVoiceSet(actor);
+
+        setDialogueCountdown();
+
+        if (schlong) {
+            actor.addToFaction(Util::APITable::getSchlongifiedFaction());
+        }
+
+        actor.addToFaction(Util::APITable::getExcitementFaction());
+        actor.addToFaction(Util::APITable::getTimesClimaxedFaction());
+        actor.addToFaction(Util::APITable::getTimeUntilClimaxFaction());
+        actor.setFactionRank(Util::APITable::getTimeUntilClimaxFaction(), -1);
+
+        startMoanCooldown();
     }
 
     void ThreadActor::initContinue() {
@@ -56,8 +71,12 @@ namespace OStim {
 
 
     void ThreadActor::undress() {
+        if ((thread->getThreadFlags() & ThreadFlag::NO_UNDRESSING) == ThreadFlag::NO_UNDRESSING) {
+            return;
+        }
+
         // TODO properly use GameActor
-        if (MCM::MCMTable::usePapyrusUndressing()) {
+        if (Util::Globals::usePapyrusUndressing()) {
             const auto skyrimVM = RE::SkyrimVM::GetSingleton();
             auto vm = skyrimVM ? skyrimVM->impl : nullptr;
             if (vm) {
@@ -97,8 +116,12 @@ namespace OStim {
     }
 
     void ThreadActor::undressPartial(uint32_t mask) {
+        if ((thread->getThreadFlags() & ThreadFlag::NO_UNDRESSING) == ThreadFlag::NO_UNDRESSING) {
+            return;
+        }
+
         // TODO properly use GameActor
-        if (MCM::MCMTable::usePapyrusUndressing()) {
+        if (Util::Globals::usePapyrusUndressing()) {
             const auto skyrimVM = RE::SkyrimVM::GetSingleton();
             auto vm = skyrimVM ? skyrimVM->impl : nullptr;
             if (vm) {
@@ -165,7 +188,7 @@ namespace OStim {
 
     void ThreadActor::redress() {
         // TODO properly use GameActor
-        if (MCM::MCMTable::usePapyrusUndressing()) {
+        if (Util::Globals::usePapyrusUndressing()) {
             const auto skyrimVM = RE::SkyrimVM::GetSingleton();
             auto vm = skyrimVM ? skyrimVM->impl : nullptr;
             if (vm) {
@@ -191,7 +214,7 @@ namespace OStim {
 
     void ThreadActor::redressPartial(uint32_t mask) {
         // TODO properly use GameActor
-        if (MCM::MCMTable::usePapyrusUndressing()) {
+        if (Util::Globals::usePapyrusUndressing()) {
             const auto skyrimVM = RE::SkyrimVM::GetSingleton();
             auto vm = skyrimVM ? skyrimVM->impl : nullptr;
             if (vm) {
@@ -247,6 +270,12 @@ namespace OStim {
     }
 
     void ThreadActor::changeNode(Graph::GraphActor* graphActor, std::vector<Trait::FacialExpression*>* nodeExpressions, std::vector<Trait::FacialExpression*>* overrideExpressions) {
+        if (this->graphActor) {
+            for (GameAPI::GameFaction faction : this->graphActor->factions) {
+                actor.removeFromFaction(faction);
+            }
+        }
+
         this->graphActor = graphActor;
 
         sosOffset = 0;
@@ -266,13 +295,6 @@ namespace OStim {
         }
         updateUnderlyingExpression();
 
-        // sound
-        if (graphActor->moan) {
-            startMoanCooldown();
-        } else {
-            stopMoanCooldown();
-        }
-
         // strap-ons
         if (!schlong) {
             if ((graphActor->condition.requirements & Graph::Requirement::PENIS) == Graph::Requirement::PENIS) {
@@ -286,6 +308,18 @@ namespace OStim {
                     unequipObject("strapon");
                 }
             }
+        }
+
+        int partnerIndex = thread->getCurrentNode()->getPrimaryPartner(index);
+        ThreadActor* partner = thread->GetActor(partnerIndex);
+        if (partner) {
+            primaryPartner = partner->actor;
+        } else {
+            primaryPartner = actor;
+        }
+
+        for (GameAPI::GameFaction faction : graphActor->factions) {
+            actor.addToFaction(faction);
         }
 
         if (awaitingClimax) {
@@ -320,6 +354,7 @@ namespace OStim {
 
     void ThreadActor::loop() {
         loopExcitement();
+        loopClimax();
 
         // expressions
         if (overwriteExpressionCooldown > 0) {
@@ -344,7 +379,7 @@ namespace OStim {
                 if (eyeballModifierOverride.size() == 1 && eyeballModifierOverride.contains(8) && eyeballModifierOverride[8].baseValue == 100) {
                     resetLooking();
                 } else {
-                    if (std::uniform_int_distribution<int>(0, 4)(Constants::RNG) == 0) {
+                    if (RNGUtil::uniformInt(0, 4) == 0) {
                         setLooking({{8, {.baseValue = 100}}});
                     }
                 }
@@ -389,7 +424,11 @@ namespace OStim {
                             continue;
                         }
 
-                        faceData->phenomeKeyFrame.values[key] = updater.step() / 100.0f;
+                        if (actor.isTalking()) {
+                            updater.step();
+                        } else {
+                            faceData->phenomeKeyFrame.values[key] = updater.step() / 100.0f;
+                        }
                         if (updater.isDone()) {
                             toDelete.push_back(key);
                         }
@@ -402,9 +441,9 @@ namespace OStim {
 
                 faceData->phenomeKeyFrame.isUpdated = false;
             }
-        } else {
-            logger::warn("no face data on actor {}", actor.getName());
         }
+
+        loopSound();
 
         // equip objects
         for (auto& [type, object] : equipObjects) {
@@ -413,15 +452,6 @@ namespace OStim {
                 if (object.variantDuration <= 0) {
                     object.unsetVariant(actor);
                 }
-            }
-        }
-
-
-        // sound
-        if (moanCooldown > 0) {
-            moanCooldown -= Constants::LOOP_TIME_MILLISECONDS;
-            if (moanCooldown <= 0) {
-                moan();
             }
         }
     }
@@ -503,7 +533,7 @@ namespace OStim {
             }
             applyExpression(underlyingExpression, mask, 1);
         }
-        underlyingExpressionCooldown = std::uniform_int_distribution<>(MCM::MCMTable::getExpressionDurationMin(), MCM::MCMTable::getExpressionDurationMax())(Constants::RNG);
+        underlyingExpressionCooldown = RNGUtil::uniformInt(MCM::MCMTable::getExpressionDurationMin(), MCM::MCMTable::getExpressionDurationMax());
     }
 
     void ThreadActor::updateOverrideExpression() {
@@ -515,7 +545,7 @@ namespace OStim {
             overrideExpression = VectorUtil::randomElement(overrideExpressions)->getGenderExpression(female);
             mask &= ~overrideExpression->typeMask;
             applyExpression(overrideExpression, overrideExpression->typeMask, 5);
-            overwriteExpressionCooldown = std::uniform_int_distribution<>(MCM::MCMTable::getExpressionDurationMin(), MCM::MCMTable::getExpressionDurationMax())(Constants::RNG);
+            overwriteExpressionCooldown = RNGUtil::uniformInt(MCM::MCMTable::getExpressionDurationMin(), MCM::MCMTable::getExpressionDurationMax());
         } else {
             overrideExpression = nullptr;
             overwriteExpressionCooldown = -1;
@@ -524,9 +554,17 @@ namespace OStim {
         wakeExpressions(mask);
     }
 
-    void ThreadActor::setEventExpression(Trait::FacialExpression* expression) {
-        stopMoanCooldown();
+    void ThreadActor::setEventExpression(std::string expression) {
+        StringUtil::toLower(&expression);
+        std::vector<Trait::FacialExpression*>* expressions = Trait::TraitTable::getExpressionsForEvent(expression);
+        if (!expressions) {
+            return;
+        }
 
+        setEventExpression(VectorUtil::randomElement(expressions));
+    }
+
+    void ThreadActor::setEventExpression(Trait::FacialExpression* expression) {
         int mask = 0;
         if (eventExpression) {
             mask = eventExpression->typeMask;
@@ -551,8 +589,6 @@ namespace OStim {
             }
             eventExpression = nullptr;
             wakeExpressions(mask);
-
-            startMoanCooldown();
         }
     }
 
@@ -627,7 +663,7 @@ namespace OStim {
 
         // expression
         if ((mask & Trait::ExpressionType::EXPRESSION) == Trait::ExpressionType::EXPRESSION) {
-            if (auto value = expression->expression.calculate(speed, excitement)) {
+            if (auto value = expression->expression.calculate(thread->getRelativeSpeed(), excitement)) {
                 faceData->exprOverride = false;
                 faceData->SetExpressionOverride(expression->expression.type, static_cast<float>(value) / 100.0f);
                 faceData->exprOverride = true;
@@ -646,7 +682,7 @@ namespace OStim {
                 int delay = 0;
                 auto iter = expression->eyelidModifiers.find(i);
                 if (iter != expression->eyelidModifiers.end()) {
-                    goal = iter->second.calculate(speed, excitement);
+                    goal = iter->second.calculate(thread->getRelativeSpeed(), excitement);
                     delay = iter->second.randomizeDelay();
                 }
                 if (current == goal) {
@@ -668,7 +704,7 @@ namespace OStim {
                 int delay = 0;
                 auto iter = expression->eyebrowModifiers.find(i);
                 if (iter != expression->eyebrowModifiers.end()) {
-                    goal = iter->second.calculate(speed, excitement);
+                    goal = iter->second.calculate(thread->getRelativeSpeed(), excitement);
                     delay = iter->second.randomizeDelay();
                 }
                 if (current == goal) {
@@ -690,7 +726,7 @@ namespace OStim {
                 int delay = 0;
                 auto iter = expression->eyeballModifiers.find(i);
                 if (iter != expression->eyeballModifiers.end()) {
-                    goal = iter->second.calculate(speed, excitement);
+                    goal = iter->second.calculate(thread->getRelativeSpeed(), excitement);
                     delay = iter->second.randomizeDelay();
                 }
                 if (current == goal) {
@@ -713,7 +749,7 @@ namespace OStim {
                 int delay = 0;
                 auto iter = expression->phonemes.find(i);
                 if (iter != expression->phonemes.end()) {
-                    goal = iter->second.calculate(speed, excitement);
+                    goal = iter->second.calculate(thread->getRelativeSpeed(), excitement);
                     delay = iter->second.randomizeDelay();
                 }
                 if (current == goal) {
@@ -774,7 +810,7 @@ namespace OStim {
             int delay = 0;
             auto iter = eyeballModifierOverride.find(i);
             if (iter != eyeballModifierOverride.end()) {
-                goal = iter->second.calculate(speed, excitement);
+                goal = iter->second.calculate(thread->getRelativeSpeed(), excitement);
                 delay = iter->second.randomizeDelay();
             }
             if (current == goal) {
@@ -841,46 +877,20 @@ namespace OStim {
     }
 
 
-    void ThreadActor::mute() {
-        if (muted) {
-            return;
-        }
-
-        stopMoanCooldown();
-        muted = true;
-    }
-
-    void ThreadActor::unmute() {
-        muted = false;
-        startMoanCooldown();
-    }
-
-    void ThreadActor::startMoanCooldown() {
-        if (!muted && !eventExpression && voiceSet && voiceSet->moan && graphActor->moan) {
-            moanCooldown = std::uniform_int_distribution<>(MCM::MCMTable::getMoanIntervalMin(), MCM::MCMTable::getMoanIntervalMax())(Constants::RNG);
-        } else {
-            moanCooldown = -1;
-        }
-    }
-
-    void ThreadActor::stopMoanCooldown() {
-        moanCooldown = -1;
-    }
-
-    void ThreadActor::moan() {
-        playEventExpression(voiceSet->moanExpression);
-        voiceSet->moan.play(actor, MCM::MCMTable::getMoanVolume());
-    }
-
-
     void ThreadActor::free() {
         logger::info("freeing actor {}-{}: {}", thread->m_threadId, index, actor.getName());
+
+        if (this->graphActor) {
+            for (GameAPI::GameFaction faction : this->graphActor->factions) {
+                actor.removeFromFaction(faction);
+            }
+        }
+
         for (auto& [type, object] : equipObjects) {
             object.unequip(actor);
             object.removeItems(actor);
         }
 
-        logger::info("starting redressing");
         // TODO properly use GameActor
         if (MCM::MCMTable::animateRedress() && !isPlayer) {
             const auto skyrimVM = RE::SkyrimVM::GetSingleton();
@@ -892,7 +902,7 @@ namespace OStim {
                 vm->DispatchStaticCall("OUndress", "AnimateRedress", args, callback);
             }
         } else {
-            if (MCM::MCMTable::usePapyrusUndressing()) {
+            if (Util::Globals::usePapyrusUndressing()) {
                 // this object will be destroyed before papyrus redressing is done
                 // so for this case we need to invoke Redress without a callback here
                 const auto skyrimVM = RE::SkyrimVM::GetSingleton();
@@ -908,14 +918,11 @@ namespace OStim {
             addWeapons();
         }
 
-        logger::info("resetting scale");
         applyHeelOffset(false);
 
         actor.setScale(scaleBefore);
         
-        // TODO GameActor
-        logger::info("calling free function");
-        freeActor(actor.form, false);
+        freeActor(actor, false);
 
         logger::info("resetting position");
         if (MCM::MCMTable::resetPosition()) {
@@ -930,7 +937,6 @@ namespace OStim {
 
         // no need to do this in ActorUtil::free since facedata isn't written into the savefile anyways
         // TODO properly use GameActor
-        logger::info("resetting face data");
         auto faceData = actor.form->GetFaceGenAnimationData();
         if (faceData) {
             faceData->ClearExpressionOverride();
@@ -938,6 +944,19 @@ namespace OStim {
         }
 
         logger::info("freed actor {}-{}: {}", thread->m_threadId, index, actor.getName());
+
+        if (!actor.isPlayer() && thread->getActors().size() > 1) {
+            // TODO: GameActor??
+            if (voiceSet.postSceneDialogue) {
+                const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+                auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+                if (vm) {
+                    RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+                    auto args = RE::MakeFunctionArguments(std::move(actor.form), std::move(primaryPartner.form), std::move(voiceSet.postSceneDialogue.form));
+                    vm->DispatchStaticCall("OSKSE", "SayPostDialogue", args, callback);
+                }
+            }
+        }
     }
 
     void ThreadActor::papyrusUndressCallback(std::vector<RE::TESObjectARMO*> items) {
@@ -971,7 +990,6 @@ namespace OStim {
     Serialization::OldThreadActor ThreadActor::serialize() {
         Serialization::OldThreadActor oldThreadActor;
 
-        // TODO ThreadActor?
         oldThreadActor.actor = actor.form;
 
         for (auto& [type, object] : equipObjects) {
@@ -979,6 +997,8 @@ namespace OStim {
                 oldThreadActor.equipObjects.push_back(item);
             }
         }
+
+        oldThreadActor.factions = graphActor->factions;
 
         return oldThreadActor;
     }

@@ -1,5 +1,9 @@
 {
+	"aliases":[
+		"pullhair"
+	],
 	"actor":{
+		"info": "the one with the hand",
 		"stimulation":0.1,
 		"maxStimulation":50,
 		"moan":true,
@@ -11,6 +15,7 @@
 		]
 	},
 	"target":{
+		"info": "the one with the head",
 		"stimulation":0.1,
 		"maxStimulation":50,
 		"requirements":[

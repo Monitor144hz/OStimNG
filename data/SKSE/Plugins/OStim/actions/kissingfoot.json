@@ -1,0 +1,63 @@
+{
+	"aliases":[
+		"kissfeet",
+		"kissfoot",
+		"kissingfeet"
+	],
+	"actor":{
+		"info": "the one with the mouth",
+		"stimulation":0.1,
+		"maxStimulation":50,
+		"moan":true,
+		"muffled":true,
+		"requirements":[
+			"mouth"
+		],
+		"strippingSlots":[
+			30,
+			31,
+			44,
+			55
+		],
+		"faction":[
+			{
+				"info": "OStimKissingFeetActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE73"
+			},
+			{
+				"info": "OStimAnyKissingActorFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEC7"
+			}
+		]
+	},
+	"target":{
+		"info": "the one with the foot",
+		"stimulation":0.1,
+		"maxStimulation":50,
+		"moan":true,
+		"talk":true,
+		"requirements":[
+			"feet"
+		],
+		"strippingSlots":[
+			37
+		],
+		"faction":[
+			{
+				"info": "OStimKissingFeetTargetFaction",
+				"mod": "OStim.esp",
+				"formid": "0xE74"
+			},
+			{
+				"info": "OStimAnyKissingTargetFaction",
+				"mod": "OStim.esp",
+				"formid": "0xEC8"
+			}
+		]
+	},
+	"tags":[
+		"sensual"
+	]
+}

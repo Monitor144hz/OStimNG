@@ -1,16 +1,28 @@
 {
+	"info": "vaginalfingering is for when actor and target are different, when they are the same use femalemasturbation",
+	"aliases":[
+		"fingering"
+	],
 	"actor":{
+		"info": "the one with the hand",
 		"stimulation":0.1,
 		"maxStimulation":50,
+		"moan": true,
 		"talk":true,
 		"requirements":[
 			"hand"
 		],
 		"strippingSlots":[
 			33
-		]
+		],
+		"faction":{
+			"info": "OStimVaginalFingeringActorFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE8C"
+		}
 	},
 	"target":{
+		"info": "the one with the vulva",
 		"stimulation":0.6,
 		"fullStrip":true,
 		"moan":true,
@@ -24,7 +36,12 @@
 			52,
 			53,
 			54
-		]
+		],
+		"faction":{
+			"info": "OStimVaginalFingeringTargetFaction",
+			"mod": "OStim.esp",
+			"formid": "0xE8D"
+		}
 	},
 	"performer":{
 		"floats":{

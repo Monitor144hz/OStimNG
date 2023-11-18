@@ -7,6 +7,9 @@ So it is recommended to start all your scene names with your personal signature 
 
 A lot of the fields in scenes have default values and don't necessarily have to be listed in the .json file.
 
+WARNING: Whatever you do, do NOT start folder or filenames with the "OStim" prefix, that namespace is reserved for OStim alone.
+Failure to comply will cause the integrity check to fail!
+
 field summary:
 
 scene fields:
@@ -24,7 +27,7 @@ scene fields:
 "defaultSpeed" (int): the index of the default speed of the scene (default 0)
 "noRandomSelection" (bool): if true this scene will never be chosen by random selections (default: false)
 "furniture" (string): the furniture type of this scene (default: none) (see furniture types README)
-"tags" (list<string>): a list of tags for this scene
+"tags" (list<string>): a list of tags for this scene (see list of commonly used scene tags)
 "autoTransitions" (map<string, string>): a map of auto transition ids and destination sceneIDs for this scene
 "actors" (list<object>): a list of actors (see actor fields)
 "actions" (list<object>): a list of actions (see action fields)
@@ -76,13 +79,16 @@ actor fields:
 "sosBend" (int): the SoSBend value for the actor (default: 0)
 	sos angles range from -9 to 9, additionally -10 will cause a flaccid schlong
 	these cause the SoSBendX animation event to be send to the actor, with X being the sosBend value
+"noStrip" (bool): if true the actor does not get undressed, no matter the actions involved (default: false)
 "scale" (float): the scale of the actor (default: 1.0)
 "scaleHeight" (float): the height against which the heel offset should be scaled (default: 120.748)
 	this can be used to keep the most important part (for example the schlong in a penetrative scene) always at the same height, no matter the heel offset
 	the default value is the total height of the vanilla skeleton
 "animationIndex" (int): the index of the animation to play (see speed fields: animation) (defaults to the actors index)
 	this can be used to invert the roles of a scene without having to register the animations twice
-"expressionAction" (int): the index of the action that takes priority for the actors facial expression (see actions README)
+"underlyingExpression" (string): an expression set to be used as the underlying expression, if left out the underlying expression will be determined based on the actions instead (see facial expressions README)
+"expressionAction" (int): the index of the action that takes priority for the actors facial expression (see facial expressions README)
+	this does nothing if the "underlyingExpression" property is used
 "expressionOverride" (string): an expression set to override the actors expression in this scene (see facial expressions README)
 "lookUp" (int): the mfg value for the eyes to look up (default: 0)
 	possible values range from -100 to 100, with negative ones causing a look down
@@ -92,7 +98,7 @@ actor fields:
 	possible values range from -100 to 100, with negative ones causing a look right
 "lookRight" (int): alternative to lookLeft with inverted values
 	if lookLeft is defined this field is ignored
-"tags" (list<string>): a list of tags for this actor
+"tags" (list<string>): a list of tags for this actor (see list of commonly used actor tags)
 "feetOnGround" (bool): if true heel scaling is in effect, if false the heel offset will be removed
 	this value defaults to true if the actor has the "standing" or "squatting" tag and false otherwise
 "autoTransitions" (map<string, string>): a map of auto transition ids and destination sceneIDs for this actor
@@ -102,3 +108,4 @@ action fields:
 "actor" (int): the index of the action actor
 "target" (int): the index of the action target (default: action actor index)
 "performer" (int): the index of the action performer (default: action actor index)
+"muted" (bool): when true this action doesn't play sounds (default: false)

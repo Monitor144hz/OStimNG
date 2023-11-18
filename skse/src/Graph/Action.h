@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GameAPI/GameFaction.h"
 #include "Sound/ActionSound/SoundType.h"
 
 namespace Graph {
@@ -14,6 +15,7 @@ namespace Graph {
         std::string expressionOverride = "";
         uint32_t requirements = 0;
 		uint32_t strippingMask = 0;
+        std::vector<GameAPI::GameFaction> factions;
 		std::unordered_map<std::string, int> ints;
         std::unordered_map<std::string, std::vector<int>> intLists;
         std::unordered_map<std::string, float> floats;
@@ -40,8 +42,11 @@ namespace Graph {
         int actor = -1;
         int target = -1;
         int performer = -1;
+        bool muted = false;
 
         bool doFullStrip(int position);
         uint32_t getStrippingMask(int position);
+        bool isType(std::string type);
+        bool isType(std::vector<std::string> types);
     };
 }

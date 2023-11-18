@@ -1,0 +1,26 @@
+{
+	"aliases":[
+		"ticklefeet",
+		"ticklefoot",
+		"ticklingfeet"
+	],
+	"actor":{
+		"info": "the one with the hand",
+		"requirements":[
+			"hand"
+		]
+	},
+	"target":{
+		"info": "the one with the foot",
+		"fullStrip":true,
+		"requirements":[
+			"feet"
+		],
+		"strippingSlots":[
+			37
+		]
+	},
+	"tags":[
+		"playful"
+	]
+}

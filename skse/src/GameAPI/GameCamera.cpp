@@ -1,6 +1,7 @@
 #include "GameCamera.h"
 
 #include "GameTable.h"
+#include "Core/ThreadManager.h"
 
 namespace GameAPI {
     void GameCamera::shakeCamera(float strength, float duration, bool firstPersonOnly) {
@@ -94,11 +95,22 @@ namespace GameAPI {
 
 
     void GameCamera::fadeToBlack(float fadeDuration) {
-        ApplyCrossFade(nullptr, 0, GameTable::getFadeToBlackHoldImod(), fadeDuration);
+        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+        if (vm) {
+            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+            auto args = RE::MakeFunctionArguments(std::move(fadeDuration));
+            vm->DispatchStaticCall("OSKSE", "FadeToBlack", args, callback);
+        }
     }
 
     void GameCamera::fadeFromBlack(float fadeDuration) {
-        PopTo(nullptr, 0, GameTable::getFadeToBlackHoldImod(), GameTable::getFadeToBlackBackImod(), 1.0f);
-        //RemoveCrossFade(nullptr, 0, fadeDuration);
+        const auto skyrimVM = RE::SkyrimVM::GetSingleton();
+        auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+        if (vm) {
+            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
+            auto args = RE::MakeFunctionArguments(std::move(fadeDuration));
+            vm->DispatchStaticCall("OSKSE", "FadeFromBlack", args, callback);
+        }
     }
 }
